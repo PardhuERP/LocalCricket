@@ -1,3 +1,4 @@
+let actionLock = false;
 const MATCH_ID = "M001";
 const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW1IAt-qV9VhgvdhI9722kXH0HC3cDw9lTiktWdPKXqQ/exec";
 
