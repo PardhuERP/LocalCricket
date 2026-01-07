@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Add Players</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f2f4f8;margin:0}
+.header{background:#0a7cff;color:#fff;padding:14px;text-align:center}
+.card{background:#fff;margin:12px;padding:12px;border-radius:8px}
+input,select,button{width:100%;padding:10px;margin-top:8px}
+button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
+</style>
+</head>
+
+<body>
+<div class="header">👥 Add Players</div>
+
+<div class="card">
+  <select id="team"></select>
+  <input id="playerName" placeholder="Player Name">
+  <button onclick="addPlayer()">Add Player</button>
+</div>
+
+<div class="card">
+  <h3>Players</h3>
+  <ul id="players"></ul>
+</div>
+
+<script>
+const API = "YOUR_EXEC_URL";
+
+function loadTeams(){
+  fetch(API+"?action=teams")
+    .then(r=>r.json())
+    .then(d=>{
+      let sel=document.getElementById("team");
+      sel.innerHTML="";
+      d.forEach(t=>{
+        sel.innerHTML+=`<option value="${t.id}">${t.name}</option>`;
+      });
+      loadPlayers();
+    });
+}
+
+function loadPlayers(){
+  let team=document.getElementById("team").value;
+  fetch(API+"?action=players&team_id="+team)
+    .then(r=>r.json())
+    .then(d=>{
+      let ul=document.getElementById("players");
+      ul.innerHTML="";
+      d.forEach(p=>{
+        ul.innerHTML+=`<li>${p.name}</li>`;
+      });
+    });
+}
+
+function addPlayer(){
+  let team=document.getElementById("team").value;
+  let name=document.getElementById("playerName").value;
+  fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({
+      action:"addPlayer",
+      team_id:team,
+      player_name:name
+    })
+  }).then(()=>{document.getElementById("playerName").value="";loadPlayers();});
+}
+
+document.getElementById("team").onchange=loadPlayers;
+loadTeams();
+</script>
+</body>
+</html>
