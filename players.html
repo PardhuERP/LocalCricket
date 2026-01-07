@@ -40,17 +40,41 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
 <script>
 const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW1IAt-qV9VhgvdhI9722kXH0HC3cDw9lTiktWdPKXqQ/exec";
 
+function loadTeams(){
+  fetch(API + "?action=teams")
+    .then(r => r.json())
+    .then(d => {
+      let sel = document.getElementById("team");
+      sel.innerHTML = "";
+      d.forEach(t => {
+        sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+      });
+      loadPlayers(); // auto load players of first team
+    });
+}
+
+function loadPlayers(){
+  let team = document.getElementById("team").value;
+  if(!team) return;
+
+  fetch(API + "?action=players&team_id=" + team)
+    .then(r => r.json())
+    .then(d => {
+      let ul = document.getElementById("players");
+      ul.innerHTML = "";
+      d.forEach(p => {
+        ul.innerHTML += `<li>${p.name} <small>(${p.role || "-"})</small></li>`;
+      });
+    });
+}
+
 function addPlayer(){
   let team = document.getElementById("team").value;
   let name = document.getElementById("playerName").value.trim();
   let role = document.getElementById("role").value;
 
-  if(!name){
-    alert("Enter player name");
-    return;
-  }
-  if(!role){
-    alert("Select player role");
+  if(!name || !role){
+    alert("Enter name & select role");
     return;
   }
 
@@ -64,43 +88,17 @@ function addPlayer(){
       role: role
     })
   })
-  .then(r=>r.json())
-  .then(()=>{
+  .then(r => r.json())
+  .then(() => {
     document.getElementById("playerName").value="";
     document.getElementById("role").value="";
     loadPlayers();
   });
 }
 
-function loadPlayers(){
-  let team=document.getElementById("team").value;
-  fetch(API+"?action=players&team_id="+team)
-    .then(r=>r.json())
-    .then(d=>{
-      let ul=document.getElementById("players");
-      ul.innerHTML="";
-      d.forEach(p=>{
-        ul.innerHTML+=`<li>${p.name} <small>(${p.role})</small></li>`;
-      });
-    });
-}
-
-function addPlayer(){
-  let team=document.getElementById("team").value;
-  let name=document.getElementById("playerName").value;
-  fetch(API,{
-    method:"POST",
-    headers:{"Content-Type":"application/x-www-form-urlencoded"},
-    body:new URLSearchParams({
-      action:"addPlayer",
-      team_id:team,
-      player_name:name
-    })
-  }).then(()=>{document.getElementById("playerName").value="";loadPlayers();});
-}
-
-document.getElementById("team").onchange=loadPlayers;
+document.getElementById("team").onchange = loadPlayers;
 loadTeams();
 </script>
+  
 </body>
 </html>
