@@ -29,13 +29,23 @@ function updateUI(d){
 
 /* 🔥 IMPORTANT CHANGE HERE */
 function post(data){
+  if(actionLock) return; // ❌ block double tap
+
+  actionLock = true;     // 🔒 lock
+
   fetch(API,{
     method:"POST",
     headers:{
       "Content-Type":"application/x-www-form-urlencoded"
     },
     body: new URLSearchParams(data)
-  }).then(fetchLive);
+  })
+  .then(fetchLive)
+  .finally(() => {
+    setTimeout(() => {
+      actionLock = false; // 🔓 unlock after delay
+    }, 600);
+  });
 }
 
 function sendBall(event,runs){
