@@ -48,10 +48,11 @@ function loadTeams(){
     .then(r => r.json())
     .then(d => {
       let sel = document.getElementById("team");
-      sel.innerHTML = "";
-      d.forEach(t => {
-        sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-      });
+      sel.innerHTML = `<option value="">Select Team</option>`;
+
+d.forEach(t => {
+  sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+});
       loadPlayers(); // auto load players of first team
     });
 }
