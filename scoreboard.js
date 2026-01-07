@@ -1,5 +1,5 @@
 const MATCH_ID = "M001";
-const API = "https://https://script.google.com/macros/s/NEW_EXEC_ID/exec";
+const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW1IAt-qV9VhgvdhI9722kXH0HC3cDw9lTiktWdPKXqQ/exec";
 
 function fetchLive(){
   fetch(API + "?action=live&match_id=" + MATCH_ID)
@@ -11,9 +11,9 @@ function updateUI(d){
   document.getElementById("score").innerText =
     `${d.runs}/${d.wickets} (${d.over}.${d.ball})`;
 
-  document.getElementById("striker").innerText = d.striker;
-  document.getElementById("nonstriker").innerText = d.non_striker;
-  document.getElementById("bowler").innerText = d.bowler;
+  document.getElementById("striker").innerText = d.striker || "-";
+  document.getElementById("nonstriker").innerText = d.non_striker || "-";
+  document.getElementById("bowler").innerText = d.bowler || "-";
 
   document.getElementById("runButtons").classList.toggle(
     "hidden", d.waiting_for !== "NONE"
@@ -25,45 +25,42 @@ function updateUI(d){
     "hidden", d.waiting_for !== "BOWLER"
   );
 }
-function sendBall(event,runs){
+
+/* 🔥 IMPORTANT CHANGE HERE */
+function post(data){
   fetch(API,{
     method:"POST",
     headers:{
-      "Content-Type":"application/json"
+      "Content-Type":"application/x-www-form-urlencoded"
     },
-    body: JSON.stringify({
-      action:"addBall",
-      match_id:MATCH_ID,
-      event:event,
-      runs:runs
-    })
+    body: new URLSearchParams(data)
   }).then(fetchLive);
+}
+
+function sendBall(event,runs){
+  post({
+    action:"addBall",
+    match_id:MATCH_ID,
+    event:event,
+    runs:runs
+  });
 }
 
 function selectBatsman(pid){
-  fetch(API,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      action:"selectBatsman",
-      match_id:MATCH_ID,
-      player:pid
-    })
-  }).then(fetchLive);
+  post({
+    action:"selectBatsman",
+    match_id:MATCH_ID,
+    player:pid
+  });
 }
 
 function selectBowler(pid){
-  fetch(API,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      action:"selectBowler",
-      match_id:MATCH_ID,
-      player:pid
-    })
-  }).then(fetchLive);
+  post({
+    action:"selectBowler",
+    match_id:MATCH_ID,
+    player:pid
+  });
 }
+
+setInterval(fetchLive,3000);
+fetchLive();
