@@ -25,10 +25,12 @@ function updateUI(d){
     "hidden", d.waiting_for !== "BOWLER"
   );
 }
-
 function sendBall(event,runs){
   fetch(API,{
     method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
     body: JSON.stringify({
       action:"addBall",
       match_id:MATCH_ID,
@@ -41,6 +43,9 @@ function sendBall(event,runs){
 function selectBatsman(pid){
   fetch(API,{
     method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
     body: JSON.stringify({
       action:"selectBatsman",
       match_id:MATCH_ID,
@@ -52,6 +57,9 @@ function selectBatsman(pid){
 function selectBowler(pid){
   fetch(API,{
     method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
     body: JSON.stringify({
       action:"selectBowler",
       match_id:MATCH_ID,
@@ -59,6 +67,3 @@ function selectBowler(pid){
     })
   }).then(fetchLive);
 }
-
-setInterval(fetchLive,3000);
-fetchLive();
