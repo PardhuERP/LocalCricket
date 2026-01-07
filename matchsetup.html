@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Match Setup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f2f4f8;margin:0}
+.header{background:#0a7cff;color:#fff;padding:14px;text-align:center}
+.card{background:#fff;margin:12px;padding:12px;border-radius:8px}
+select,input,button{width:100%;padding:10px;margin-top:8px}
+button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
+</style>
+</head>
+
+<body>
+<div class="header">🏟️ Match Setup</div>
+
+<div class="card">
+  <select id="teamA"></select>
+  <select id="teamB"></select>
+  <input id="overs" placeholder="Overs" type="number">
+  <button onclick="createMatch()">Create Match</button>
+</div>
+
+<script>
+const API = "YOUR_EXEC_URL";
+
+function loadTeams(){
+  fetch(API+"?action=teams")
+    .then(r=>r.json())
+    .then(d=>{
+      let a=document.getElementById("teamA");
+      let b=document.getElementById("teamB");
+      a.innerHTML="";b.innerHTML="";
+      d.forEach(t=>{
+        a.innerHTML+=`<option value="${t.id}">${t.name}</option>`;
+        b.innerHTML+=`<option value="${t.id}">${t.name}</option>`;
+      });
+    });
+}
+
+function createMatch(){
+  let a=document.getElementById("teamA").value;
+  let b=document.getElementById("teamB").value;
+  let o=document.getElementById("overs").value;
+
+  fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({
+      action:"createMatch",
+      teamA:a,
+      teamB:b,
+      overs:o
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    alert("Match Created: "+d.match_id);
+    window.location="scoreboard.html?match_id="+d.match_id;
+  });
+}
+
+loadTeams();
+</script>
+</body>
+</html>
