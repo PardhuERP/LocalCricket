@@ -18,8 +18,18 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
 
 <div class="card">
   <select id="team"></select>
-  <input id="playerName" placeholder="Player Name">
-  <button onclick="addPlayer()">Add Player</button>
+
+<input id="playerName" placeholder="Player Name">
+
+<select id="role">
+  <option value="">Select Role</option>
+  <option value="Batsman">Batsman</option>
+  <option value="Bowler">Bowler</option>
+  <option value="All-Rounder">All-Rounder</option>
+  <option value="Wicket-Keeper">Wicket-Keeper</option>
+</select>
+
+<button onclick="addPlayer()">Add Player</button>
 </div>
 
 <div class="card">
