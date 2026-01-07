@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Create Team</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f2f4f8;margin:0}
+.header{background:#0a7cff;color:#fff;padding:14px;text-align:center}
+.card{background:#fff;margin:12px;padding:12px;border-radius:8px}
+input,button{width:100%;padding:10px;margin-top:8px}
+button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
+</style>
+</head>
+
+<body>
+<div class="header">🏏 Create Team</div>
+
+<div class="card">
+  <input id="teamName" placeholder="Enter Team Name">
+  <button onclick="createTeam()">Create Team</button>
+</div>
+
+<div class="card">
+  <h3>Teams</h3>
+  <ul id="teams"></ul>
+</div>
+
+<script>
+const API = "YOUR_EXEC_URL";
+
+function loadTeams(){
+  fetch(API+"?action=teams")
+    .then(r=>r.json())
+    .then(d=>{
+      let ul=document.getElementById("teams");
+      ul.innerHTML="";
+      d.forEach(t=>{
+        ul.innerHTML += `<li>${t.name} (${t.id})</li>`;
+      });
+    });
+}
+
+function createTeam(){
+  let name=document.getElementById("teamName").value;
+  fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({
+      action:"createTeam",
+      team_name:name,
+      admin_id:"ADMIN"
+    })
+  }).then(()=>{document.getElementById("teamName").value="";loadTeams();});
+}
+
+loadTeams();
+</script>
+</body>
+</html>
