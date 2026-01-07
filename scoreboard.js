@@ -1,9 +1,9 @@
-const MATCH_ID = "M001";   // dynamic later
-const API = "YOUR_APPS_SCRIPT_WEBAPP_URL"; // paste exec URL
+const MATCH_ID = "M001";
+const API = "https://https://script.google.com/macros/s/NEW_EXEC_ID/exec";
 
 function fetchLive(){
   fetch(API + "?action=live&match_id=" + MATCH_ID)
-    .then(r=>r.json())
+    .then(r => r.json())
     .then(updateUI);
 }
 
@@ -26,8 +26,8 @@ function updateUI(d){
   );
 }
 
-function addBall(event,runs){
-  fetch(API, {
+function sendBall(event,runs){
+  fetch(API,{
     method:"POST",
     body: JSON.stringify({
       action:"addBall",
