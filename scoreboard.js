@@ -73,5 +73,12 @@ function selectBowler(pid){
   });
 }
 
+function undo(){
+  post({
+    action:"undoBall",
+    match_id:MATCH_ID
+  });
+}
+
 setInterval(fetchLive,3000);
 fetchLive();
