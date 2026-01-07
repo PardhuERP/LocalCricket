@@ -9,48 +9,53 @@
 body{font-family:Arial;margin:0;background:#f2f4f8}
 .header{background:#0a7cff;color:#fff;padding:14px;text-align:center;font-size:18px}
 .card{background:#fff;margin:10px;padding:12px;border-radius:8px}
-.score{font-size:26px;font-weight:bold}
+.score{font-size:26px;font-weight:bold;text-align:center}
 .row{display:flex;justify-content:space-between;margin-top:6px}
 .buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px}
-button{padding:14px;font-size:16px;border:none;border-radius:6px;background:#e0e0e0}
-button.primary{background:#0a7cff;color:#fff}
+button{padding:14px;font-size:16px;border:none;border-radius:6px}
+.run{background:#e0e0e0}
+.action{background:#ff5252;color:#fff}
+.extra{background:#ffc107}
 .hidden{display:none}
 </style>
 </head>
 
 <body>
-<div class="header">Live Match</div>
+
+<div class="header">🏏 Live Match</div>
 
 <div class="card">
   <div class="score" id="score">0/0 (0.0)</div>
   <div class="row">
-    <div>Striker: <span id="striker">-</span></div>
-    <div>Non-Striker: <span id="nonstriker">-</span></div>
+    <div>Striker: <b id="striker">-</b></div>
+    <div>Non-Striker: <b id="nonstriker">-</b></div>
   </div>
   <div class="row">
-    <div>Bowler: <span id="bowler">-</span></div>
+    <div>Bowler: <b id="bowler">-</b></div>
   </div>
 </div>
 
+<!-- RUN BUTTONS -->
 <div class="buttons" id="runButtons">
-  <button onclick="addBall(0,0)">0</button>
-  <button onclick="addBall(1,1)">1</button>
-  <button onclick="addBall(2,2)">2</button>
-  <button onclick="addBall(3,3)">3</button>
-  <button onclick="addBall(4,4)">4</button>
-  <button onclick="addBall(5,5)">5</button>
-  <button onclick="addBall(6,6)">6</button>
-  <button onclick="addBall('WIDE',0)">Wide</button>
-  <button onclick="addBall('NO_BALL',0)">No Ball</button>
-  <button onclick="addBall('WICKET',0)" class="primary">Wicket</button>
+  <button class="run" onclick="sendBall(0,0)">0</button>
+  <button class="run" onclick="sendBall(1,1)">1</button>
+  <button class="run" onclick="sendBall(2,2)">2</button>
+  <button class="run" onclick="sendBall(3,3)">3</button>
+  <button class="run" onclick="sendBall(4,4)">4</button>
+  <button class="run" onclick="sendBall(6,6)">6</button>
+  <button class="extra" onclick="sendBall('WIDE',0)">Wide</button>
+  <button class="extra" onclick="sendBall('NO_BALL',0)">No Ball</button>
+  <button class="action" onclick="sendBall('WICKET',0)">Wicket</button>
 </div>
 
+<!-- BATSMAN SELECT -->
 <div class="card hidden" id="batsmanBox">
   <b>Select New Batsman</b><br><br>
   <button onclick="selectBatsman('P3')">P3</button>
   <button onclick="selectBatsman('P4')">P4</button>
 </div>
 
+<!-- BOWLER SELECT -->
 <div class="card hidden" id="bowlerBox">
   <b>Select New Bowler</b><br><br>
   <button onclick="selectBowler('P11')">P11</button>
