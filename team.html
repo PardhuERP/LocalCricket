@@ -30,30 +30,42 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
 const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW1IAt-qV9VhgvdhI9722kXH0HC3cDw9lTiktWdPKXqQ/exec";
 
 function loadTeams(){
-  fetch(API+"?action=teams")
-    .then(r=>r.json())
-    .then(d=>{
-      let ul=document.getElementById("teams");
-      ul.innerHTML="";
-      d.forEach(t=>{
+  fetch(API + "?action=teams")
+    .then(r => r.json())
+    .then(d => {
+      let ul = document.getElementById("teams");
+      ul.innerHTML = "";
+      d.forEach(t => {
         ul.innerHTML += `<li>${t.name} (${t.id})</li>`;
       });
     });
 }
 
 function createTeam(){
-  let name=document.getElementById("teamName").value;
+  let name = document.getElementById("teamName").value.trim();
+  if(!name){
+    alert("Enter team name");
+    return;
+  }
+
   fetch(API,{
     method:"POST",
-    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    headers:{ "Content-Type":"application/x-www-form-urlencoded" },
     body:new URLSearchParams({
       action:"createTeam",
       team_name:name,
       admin_id:"ADMIN"
     })
-  }).then(()=>{document.getElementById("teamName").value="";loadTeams();});
+  })
+  .then(r => r.json())
+  .then(res => {
+    alert("Team created successfully");
+    document.getElementById("teamName").value = "";
+    loadTeams(); // refresh list
+  });
 }
 
+// initial load
 loadTeams();
 </script>
 </body>
