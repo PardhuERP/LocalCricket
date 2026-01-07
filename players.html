@@ -80,7 +80,7 @@ function loadPlayers(){
       let ul=document.getElementById("players");
       ul.innerHTML="";
       d.forEach(p=>{
-        ul.innerHTML+=`<li>${p.name}</li>`;
+        ul.innerHTML+=`<li>${p.name} <small>(${p.role})</small></li>`;
       });
     });
 }
