@@ -26,7 +26,6 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
 <select id="role">
   <option value="">Select Role</option>
   <option value="Batsman">Captain</option>
-  <option value="Batsman">Batsman</option>
   <option value="Bowler">Bowler</option>
   <option value="All-Rounder">All-Rounder</option>
   <option value="Wicket-Keeper">Wicket-Keeper</option>
@@ -77,10 +76,18 @@ function addPlayer(){
   let name = document.getElementById("playerName").value.trim();
   let role = document.getElementById("role").value;
 
-  if(!name || !role){
-    alert("Enter name & select role");
-    return;
-  }
+  if(!team){
+  alert("Select team");
+  return;
+}
+if(!name){
+  alert("Enter player name");
+  return;
+}
+if(!role){
+  alert("Select role");
+  return;
+}
 
   fetch(API,{
     method:"POST",
