@@ -3,168 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Cricket Scorer</title>
+    <title>Cricket Scorer Pro</title>
     <style>
-        /* UI ని అందంగా మార్చడానికి CSS */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #eef2f3; text-align: center; }
-        .header { background: #007bff; color: white; padding: 15px; font-size: 20px; font-weight: bold; }
-        .screen { display: none; padding: 20px; animation: fadeIn 0.5s; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; text-align: center; }
+        .header { background: #1a237e; color: white; padding: 20px; font-size: 22px; }
+        .screen { display: none; padding: 20px; }
         .active { display: block; }
-        input, select { width: 80%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { width: 85%; padding: 12px; margin: 10px 0; border: none; border-radius: 5px; background: #28a745; color: white; font-size: 16px; cursor: pointer; }
-        
-        /* Scoreboard Style */
-        #scoreboard { background: #333; color: gold; padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
-        .run-btn { background: #fff; color: #333; font-weight: bold; border: 1px solid #ddd; }
-        .wicket-btn { background: #dc3545; }
-        .extra-btn { background: #ffc107; color: black; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, select { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { width: 95%; padding: 12px; margin: 10px 0; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-primary { background: #1a237e; color: white; }
+        .btn-success { background: #2e7d32; color: white; }
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .score-box { background: #212121; color: #ffeb3b; padding: 20px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="header">🏏 Local Cricket Live</div>
+<div class="header">🏏 Local Cricket App</div>
 
-    <div id="setup-screen" class="screen active">
-        <h3>Match Details</h3>
-        <input type="text" id="teamA" placeholder="Team A Name (Batting)">
-        <input type="text" id="teamB" placeholder="Team B Name (Bowling)">
+<div id="dashboard-screen" class="screen active">
+    <div class="card">
+        <h3>Main Dashboard</h3>
+        <button class="btn btn-primary" onclick="showScreen('team-screen')">➕ Create Team / Add Players</button>
+        <button class="btn btn-success" onclick="goToMatchSetup()">🏏 Start New Match</button>
+        <button class="btn" style="background: #fb8c00; color: white;">📊 Match History</button>
+    </div>
+</div>
+
+<div id="team-screen" class="screen">
+    <div class="card">
+        <h3>Register Team & Players</h3>
+        <input type="text" id="regTeamName" placeholder="Enter Team Name">
+        <input type="text" id="regPlayerName" placeholder="Enter Player Name">
+        <select id="regPlayerRole">
+            <option value="Batsman">Batsman</option>
+            <option value="Bowler">Bowler</option>
+            <option value="All-Rounder">All-Rounder</option>
+        </select>
+        <button class="btn btn-success" onclick="savePlayer()">Save Player</button>
+        <button class="btn" onclick="showScreen('dashboard-screen')">Back to Dashboard</button>
+    </div>
+</div>
+
+<div id="setup-screen" class="screen">
+    <div class="card">
+        <h3>Match Setup</h3>
+        <input type="text" id="teamA" placeholder="Batting Team Name">
+        <input type="text" id="teamB" placeholder="Bowling Team Name">
         <input type="number" id="maxOvers" placeholder="Total Overs">
-        <button onclick="loadPlayers()">Next: Select Players</button>
+        <button class="btn btn-primary" onclick="loadPlayersForMatch()">Select Players & Start</button>
     </div>
+</div>
 
-    <div id="player-setup-screen" class="screen">
-        <h3>Select Initial Players</h3>
-        <p>Batting: <b id="battingTeamName"></b></p>
-        <label>Striker:</label>
-        <select id="select-striker"></select>
-        <label>Non-Striker:</label>
-        <select id="select-non-striker"></select>
-        <p>Bowling: <b id="bowlingTeamName"></b></p>
-        <label>Opening Bowler:</label>
-        <select id="select-bowler"></select>
-        <button onclick="confirmMatchStart()">Start Scoring</button>
+<div id="player-setup-screen" class="screen">
+    <div class="card">
+        <h3>Select Playing XI</h3>
+        <label>Striker:</label> <select id="select-striker"></select>
+        <label>Non-Striker:</label> <select id="select-non-striker"></select>
+        <label>Opening Bowler:</label> <select id="select-bowler"></select>
+        <button class="btn btn-success" onclick="startScoring()">Start Match</button>
     </div>
+</div>
 
-    <div id="scoring-screen" class="screen">
-        <div id="scoreboard">
-            <h2 id="live-score">0 - 0</h2>
-            <p id="live-overs">Overs: 0.0</p>
-            <hr>
-            <div style="display: flex; justify-content: space-around; font-size: 14px;">
-                <div id="disp-striker" style="color: lightgreen;">* Striker</div>
-                <div id="disp-nonstriker">Non-Striker</div>
-            </div>
-            <p id="disp-bowler" style="font-size: 13px; color: #aaa;">Bowler: --</p>
+<div id="scoring-screen" class="screen">
+    <div class="score-box">
+        <h1 id="live-score">0 - 0</h1>
+        <p id="live-overs">Overs: 0.0</p>
+        <div style="display: flex; justify-content: space-around;">
+            <span id="disp-striker" style="color: #4caf50;">* Player 1</span>
+            <span id="disp-nonstriker">Player 2</span>
         </div>
-
-        <div class="btn-grid">
-            <button class="run-btn" onclick="addRuns(0)">0</button>
-            <button class="run-btn" onclick="addRuns(1)">1</button>
-            <button class="run-btn" onclick="addRuns(2)">2</button>
-            <button class="run-btn" onclick="addRuns(3)">3</button>
-            <button class="run-btn" onclick="addRuns(4)">4</button>
-            <button class="run-btn" onclick="addRuns(6)">6</button>
-            <button class="extra-btn" onclick="handleExtra('WD')">WD</button>
-            <button class="extra-btn" onclick="handleExtra('NB')">NB</button>
-            <button class="wicket-btn" onclick="handleWicket()">WICKET</button>
-        </div>
-        <button onclick="undoBall()" style="background: #6c757d;">Undo Ball</button>
     </div>
+    <div class="btn-grid" style="margin-top: 20px;">
+        <button class="btn" onclick="addRuns(0)">0</button>
+        <button class="btn" onclick="addRuns(1)">1</button>
+        <button class="btn" onclick="addRuns(2)">2</button>
+        <button class="btn" onclick="addRuns(3)">3</button>
+        <button class="btn" onclick="addRuns(4)" style="background: #ff9800;">4</button>
+        <button class="btn" onclick="addRuns(6)" style="background: #ff9800;">6</button>
+        <button class="btn" style="background: #f44336; color: white;" onclick="handleWicket()">W</button>
+        <button class="btn" style="background: #9e9e9e;">WD</button>
+        <button class="btn" style="background: #9e9e9e;">NB</button>
+    </div>
+</div>
 
-    <script>
-        // 1. సెటప్ మరియు వేరియబుల్స్
-        let api_url = "https://script.google.com/macros/s/AKfycbyS7TFThInUkfaB1znFuf6zmST779Qzjo6oJkGLOoNcllxT1CYI4Wbe4HVw3LLnz9hL1A/exec"; 
-        let runs = 0, wickets = 0, balls = 0, currentOverBalls = 0;
-        let playersData = [];
+<script>
+    let api_url = "https://script.google.com/macros/s/AKfycbyS7TFThInUkfaB1znFuf6zmST779Qzjo6oJkGLOoNcllxT1CYI4Wbe4HVw3LLnz9hL1A/exec"; // ఇక్కడ మీ URL పెట్టండి
+    let playersData = [];
+    let runs = 0, wickets = 0, balls = 0;
 
-        // 2. ప్లేయర్స్ ని షీట్ నుండి లోడ్ చేయడం
-        async function loadPlayers() {
-            const tA = document.getElementById('teamA').value;
-            const tB = document.getElementById('teamB').value;
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
 
-            if(!tA || !tB) { alert("Please enter team names"); return; }
+    // టీమ్ మరియు ప్లేయర్ ని సేవ్ చేయడం
+    async function savePlayer() {
+        let tName = document.getElementById('regTeamName').value;
+        let pName = document.getElementById('regPlayerName').value;
+        let pRole = document.getElementById('regPlayerRole').value;
 
-            document.getElementById('battingTeamName').innerText = tA;
-            document.getElementById('bowlingTeamName').innerText = tB;
+        if(!tName || !pName) { alert("Please fill details"); return; }
 
-            // Loading message
-            alert("Loading players from Google Sheets...");
-            
-            try {
-                let resp = await fetch(api_url + "?action=read&sheet=Players");
-                playersData = await resp.json();
-                
-                fillDropdown('select-striker', tA);
-                fillDropdown('select-non-striker', tA);
-                fillDropdown('select-bowler', tB);
+        let data = {
+            action: "insert",
+            sheet: "Players",
+            values: [new Date().getTime(), tName, pName, pRole]
+        };
 
-                showScreen('player-setup-screen');
-            } catch (e) {
-                alert("Error loading players. Make sure your API is working!");
-            }
-        }
+        let resp = await fetch(api_url, { method: "POST", body: JSON.stringify(data) });
+        alert("Player Saved Successfully!");
+        document.getElementById('regPlayerName').value = "";
+    }
 
-        function fillDropdown(elementId, teamName) {
-            let dropdown = document.getElementById(elementId);
-            dropdown.innerHTML = "";
-            let filtered = playersData.filter(p => p.TeamName == teamName);
-            filtered.forEach(p => {
-                let opt = document.createElement('option');
-                opt.value = p.PlayerName;
-                opt.text = p.PlayerName;
-                dropdown.appendChild(opt);
-            });
-        }
+    function goToMatchSetup() { showScreen('setup-screen'); }
 
-        function confirmMatchStart() {
-            document.getElementById('disp-striker').innerText = "* " + document.getElementById('select-striker').value;
-            document.getElementById('disp-nonstriker').innerText = document.getElementById('select-non-striker').value;
-            document.getElementById('disp-bowler').innerText = "Bowler: " + document.getElementById('select-bowler').value;
-            showScreen('scoring-screen');
-        }
+    // ప్లేయర్స్ ని లోడ్ చేయడం
+    async function loadPlayersForMatch() {
+        let tA = document.getElementById('teamA').value;
+        let tB = document.getElementById('teamB').value;
+        
+        let resp = await fetch(api_url + "?action=read&sheet=Players");
+        playersData = await resp.json();
 
-        // 3. స్కోరింగ్ లాజిక్
-        function addRuns(r) {
-            runs += r;
-            balls++;
-            currentOverBalls++;
-            updateDisplay();
-            checkOverEnd();
-        }
+        fillDropdown('select-striker', tA);
+        fillDropdown('select-non-striker', tA);
+        fillDropdown('select-bowler', tB);
+        showScreen('player-setup-screen');
+    }
 
-        function handleWicket() {
-            wickets++;
-            balls++;
-            currentOverBalls++;
-            updateDisplay();
-            if(wickets < 10) {
-                alert("Wicket! Select new batsman.");
-                // ఇక్కడ బ్యాట్స్‌మన్ మార్చే లాజిక్ వస్తుంది
-            }
-            checkOverEnd();
-        }
+    function fillDropdown(id, team) {
+        let select = document.getElementById(id);
+        select.innerHTML = "";
+        let filtered = playersData.filter(p => p.TeamName == team);
+        filtered.forEach(p => {
+            let opt = document.createElement('option');
+            opt.value = p.PlayerName;
+            opt.text = p.PlayerName;
+            select.appendChild(opt);
+        });
+    }
 
-        function updateDisplay() {
-            let ov = Math.floor(balls/6) + "." + (balls%6);
-            document.getElementById('live-score').innerText = runs + " - " + wickets;
-            document.getElementById('live-overs').innerText = "Overs: " + ov;
-        }
+    function startScoring() {
+        document.getElementById('disp-striker').innerText = "* " + document.getElementById('select-striker').value;
+        document.getElementById('disp-nonstriker').innerText = document.getElementById('select-non-striker').value;
+        showScreen('scoring-screen');
+    }
 
-        function checkOverEnd() {
-            if(currentOverBalls == 6) {
-                alert("Over End! Change Bowler.");
-                currentOverBalls = 0;
-                // స్ట్రైకర్ మార్పిడి మరియు బౌలర్ సెలెక్షన్ ఇక్కడ వస్తుంది
-            }
-        }
+    function addRuns(r) {
+        runs += r;
+        balls++;
+        updateScore();
+    }
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-    </script>
+    function updateScore() {
+        let ov = Math.floor(balls/6) + "." + (balls%6);
+        document.getElementById('live-score').innerText = runs + " - " + wickets;
+        document.getElementById('live-overs').innerText = "Overs: " + ov;
+    }
+
+    function handleWicket() {
+        wickets++;
+        balls++;
+        updateScore();
+    }
+</script>
+
 </body>
 </html>
