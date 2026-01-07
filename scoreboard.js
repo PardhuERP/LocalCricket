@@ -16,8 +16,8 @@ function updateUI(d){
   document.getElementById("bowler").innerText = d.bowler || "-";
 
   document.getElementById("runButtons").classList.toggle(
-    "hidden", d.waiting_for !== "NONE"
-  );
+  "hidden", d.waiting_for !== "NONE" || d.ball >= 6
+);
   document.getElementById("batsmanBox").classList.toggle(
     "hidden", d.waiting_for !== "BATSMAN"
   );
