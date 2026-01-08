@@ -36,11 +36,17 @@ const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW
  * LOAD TEAMS
  ***********************/
 function loadTeams(){
-  fetch(API + "?action=teams")
+  fetch(API + "?action=teams&t=" + Date.now()) // 🔥 cache buster
     .then(r => r.json())
     .then(d => {
       let ul = document.getElementById("teams");
       ul.innerHTML = "";
+
+      if(d.length === 0){
+        ul.innerHTML = "<li>No teams yet</li>";
+        return;
+      }
+
       d.forEach(t => {
         ul.innerHTML += `<li>${t.name}</li>`;
       });
