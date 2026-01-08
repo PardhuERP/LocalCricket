@@ -6,9 +6,12 @@ let TEAM_MAP = {};
  * LOAD TEAMS
  ***********************/
 function loadTeams(){
-  fetch(API + "?action=teams")
+
+  fetch(API + "?action=teams&t=" + Date.now())
     .then(r => r.json())
     .then(d => {
+
+      console.log("Teams API:", d); // 🔥 DEBUG
 
       const teamA = document.getElementById("teamA");
       const teamB = document.getElementById("teamB");
@@ -18,6 +21,11 @@ function loadTeams(){
 
       TEAM_MAP = {};
 
+      if (!Array.isArray(d) || d.length === 0) {
+        alert("No teams found");
+        return;
+      }
+
       d.forEach(t => {
         TEAM_MAP[t.id] = t.name;
         teamA.innerHTML += `<option value="${t.id}">${t.name}</option>`;
@@ -26,6 +34,10 @@ function loadTeams(){
 
       teamA.onchange = updateTossBat;
       teamB.onchange = updateTossBat;
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Failed to load teams");
     });
 }
 
@@ -53,7 +65,7 @@ function updateTossBat(){
 }
 
 /***********************
- * CREATE MATCH (FINAL)
+ * CREATE MATCH (GET)
  ***********************/
 function createMatch(){
 
@@ -76,7 +88,7 @@ function createMatch(){
     return;
   }
   if(!toss || !bat){
-    alert("Select toss winner and batting first");
+    alert("Select toss & batting");
     return;
   }
 
@@ -85,27 +97,17 @@ function createMatch(){
     "?action=createMatch" +
     "&teamA=" + teamA +
     "&teamB=" + teamB +
-    "&overs=" + overs
+    "&overs=" + overs +
+    "&t=" + Date.now()
   )
-  .then(r => r.text())               // 🔥 FIX
-  .then(txt => {
-
-    console.log("RAW RESPONSE:", txt);
-
-    let d;
-    try {
-      d = JSON.parse(txt);
-    } catch(e){
-      alert("Invalid server response");
-      return;
-    }
+  .then(r => r.json())
+  .then(d => {
 
     if(!d.match_id){
       alert("Match ID missing");
       return;
     }
 
-    // ✅ Redirect with ALL required params
     window.location =
       "scoreboard.html" +
       "?match_id=" + d.match_id +
@@ -119,18 +121,7 @@ function createMatch(){
   });
 }
 
-    // ✅ PASS ALL REQUIRED PARAMS
-    window.location =
-      "scoreboard.html" +
-      "?match_id=" + d.match_id +
-      "&teamA=" + teamA +
-      "&teamB=" + teamB +
-      "&batting=" + bat;
-  })
-  .catch(err => {
-    console.error(err);
-    alert("Error creating match");
-  });
-}
-
+/***********************
+ * INIT
+ ***********************/
 document.addEventListener("DOMContentLoaded", loadTeams);
