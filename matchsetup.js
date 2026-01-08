@@ -5,13 +5,12 @@ let TEAM_MAP = {};
 /***********************
  * LOAD TEAMS
  ***********************/
-function loadTeams(){
-
+function loadTeams() {
   fetch(API + "?action=teams&t=" + Date.now())
     .then(r => r.json())
     .then(d => {
 
-      console.log("Teams API:", d); // 🔥 DEBUG
+      console.log("Teams API:", d); // DEBUG
 
       const teamA = document.getElementById("teamA");
       const teamB = document.getElementById("teamB");
@@ -44,8 +43,7 @@ function loadTeams(){
 /***********************
  * UPDATE TOSS & BATTING
  ***********************/
-function updateTossBat(){
-
+function updateTossBat() {
   const a = document.getElementById("teamA").value;
   const b = document.getElementById("teamB").value;
 
@@ -55,7 +53,7 @@ function updateTossBat(){
   toss.innerHTML = `<option value="">Toss Winner</option>`;
   bat.innerHTML  = `<option value="">Batting First</option>`;
 
-  if(a && b){
+  if (a && b) {
     toss.innerHTML += `<option value="${a}">${TEAM_MAP[a]}</option>`;
     toss.innerHTML += `<option value="${b}">${TEAM_MAP[b]}</option>`;
 
@@ -65,9 +63,9 @@ function updateTossBat(){
 }
 
 /***********************
- * CREATE MATCH (GET)
+ * CREATE MATCH
  ***********************/
-function createMatch(){
+function createMatch() {
 
   const teamA = document.getElementById("teamA").value;
   const teamB = document.getElementById("teamB").value;
@@ -75,19 +73,19 @@ function createMatch(){
   const toss  = document.getElementById("toss").value;
   const bat   = document.getElementById("batting").value;
 
-  if(!teamA || !teamB){
+  if (!teamA || !teamB) {
     alert("Select both teams");
     return;
   }
-  if(teamA === teamB){
+  if (teamA === teamB) {
     alert("Teams must be different");
     return;
   }
-  if(!overs || overs <= 0){
+  if (!overs || overs <= 0) {
     alert("Enter valid overs");
     return;
   }
-  if(!toss || !bat){
+  if (!toss || !bat) {
     alert("Select toss & batting");
     return;
   }
@@ -102,8 +100,7 @@ function createMatch(){
   )
   .then(r => r.json())
   .then(d => {
-
-    if(!d.match_id){
+    if (!d.match_id) {
       alert("Match ID missing");
       return;
     }
