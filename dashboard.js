@@ -11,7 +11,7 @@ function loadLiveMatches(){
       let box = document.getElementById("liveMatches");
       box.innerHTML = "";
 
-      if(d.length === 0){
+      if(!d || d.length === 0){
         box.innerHTML = "<p>No live matches</p>";
         return;
       }
@@ -27,6 +27,10 @@ function loadLiveMatches(){
           </div>
         `;
       });
+    })
+    .catch(()=>{
+      document.getElementById("liveMatches").innerHTML =
+        "<p>No live matches</p>";
     });
 }
 
