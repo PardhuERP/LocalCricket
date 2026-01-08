@@ -43,7 +43,6 @@ function updateTossBat(){
   toss.innerHTML = `<option value="">Toss Winner</option>`;
   bat.innerHTML  = `<option value="">Batting First</option>`;
 
-  // show options only when both teams selected
   if(a && b){
     toss.innerHTML += `<option value="${a}">${TEAM_MAP[a]}</option>`;
     toss.innerHTML += `<option value="${b}">${TEAM_MAP[b]}</option>`;
@@ -54,7 +53,7 @@ function updateTossBat(){
 }
 
 /***********************
- * CREATE MATCH (GET)
+ * CREATE MATCH (FINAL)
  ***********************/
 function createMatch(){
 
@@ -81,7 +80,6 @@ function createMatch(){
     return;
   }
 
-  // CREATE MATCH USING GET (NO CORS ISSUE)
   fetch(
     API +
     "?action=createMatch" +
@@ -92,14 +90,21 @@ function createMatch(){
   .then(r => r.json())
   .then(d => {
 
-    // pass toss & batting info to scoreboard (not saved in MATCHES)
+    if(!d.match_id){
+      alert("Match ID missing");
+      return;
+    }
+
+    // ✅ PASS ALL REQUIRED PARAMS
     window.location =
       "scoreboard.html" +
       "?match_id=" + d.match_id +
-      "&toss=" + toss +
+      "&teamA=" + teamA +
+      "&teamB=" + teamB +
       "&batting=" + bat;
   })
-  .catch(() => {
+  .catch(err => {
+    console.error(err);
     alert("Error creating match");
   });
 }
