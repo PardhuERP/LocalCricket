@@ -99,26 +99,34 @@ function addPlayer(){
     return;
   }
 
-  // ✅ GET request (NO CORS ISSUE)
   fetch(
     API +
     "?action=addPlayer" +
     "&team_id=" + team +
     "&player_name=" + encodeURIComponent(name) +
-    "&role=" + role
+    "&role=" + encodeURIComponent(role) +
+    "&t=" + Date.now() // 🔥 cache buster
   )
   .then(r => r.json())
   .then(res => {
-    if(res.status === "ok"){
-      document.getElementById("playerName").value = "";
-      document.getElementById("role").value = "";
-      loadPlayers();
-    } else {
+
+    if(res.status !== "ok"){
       alert("Error adding player");
+      return;
     }
+
+    alert("Player added ✅");
+
+    document.getElementById("playerName").value = "";
+    document.getElementById("role").value = "";
+
+    loadPlayers(); // 🔁 reload list
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Network error");
   });
 }
-
 document.getElementById("team").onchange = loadPlayers;
 loadTeams();
 </script>
