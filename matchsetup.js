@@ -2,6 +2,9 @@ const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW
 
 let TEAM_MAP = {};
 
+/***********************
+ * LOAD TEAMS
+ ***********************/
 function loadTeams(){
   fetch(API + "?action=teams")
     .then(r => r.json())
@@ -26,6 +29,9 @@ function loadTeams(){
     });
 }
 
+/***********************
+ * UPDATE TOSS & BATTING
+ ***********************/
 function updateTossBat(){
 
   const a = document.getElementById("teamA").value;
@@ -37,6 +43,7 @@ function updateTossBat(){
   toss.innerHTML = `<option value="">Toss Winner</option>`;
   bat.innerHTML  = `<option value="">Batting First</option>`;
 
+  // show options only when both teams selected
   if(a && b){
     toss.innerHTML += `<option value="${a}">${TEAM_MAP[a]}</option>`;
     toss.innerHTML += `<option value="${b}">${TEAM_MAP[b]}</option>`;
@@ -46,6 +53,9 @@ function updateTossBat(){
   }
 }
 
+/***********************
+ * CREATE MATCH (GET)
+ ***********************/
 function createMatch(){
 
   const teamA = document.getElementById("teamA").value;
@@ -59,7 +69,7 @@ function createMatch(){
     return;
   }
   if(teamA === teamB){
-    alert("Team A and Team B must be different");
+    alert("Teams must be different");
     return;
   }
   if(!overs || overs <= 0){
@@ -71,38 +81,23 @@ function createMatch(){
     return;
   }
 
-  // 1️⃣ CREATE MATCH
-  fetch(API,{
-    method:"POST",
-    headers:{ "Content-Type":"application/x-www-form-urlencoded" },
-    body:new URLSearchParams({
-      action:"createMatch",
-      teamA: teamA,
-      teamB: teamB,
-      overs: overs
-    })
-  })
+  // CREATE MATCH USING GET (NO CORS ISSUE)
+  fetch(
+    API +
+    "?action=createMatch" +
+    "&teamA=" + teamA +
+    "&teamB=" + teamB +
+    "&overs=" + overs
+  )
   .then(r => r.json())
   .then(d => {
 
-    // 2️⃣ START MATCH (INIT LIVE_STATE)
-    fetch(API,{
-      method:"POST",
-      headers:{ "Content-Type":"application/x-www-form-urlencoded" },
-      body:new URLSearchParams({
-        action:"startMatch",
-        match_id: d.match_id,
-        batting: bat,
-        bowling: bat === teamA ? teamB : teamA,
-        striker: "",        // will be selected in scoreboard
-        nonStriker: "",
-        bowler: ""
-      })
-    })
-    .then(() => {
-      window.location = "scoreboard.html?match_id=" + d.match_id;
-    });
-
+    // pass toss & batting info to scoreboard (not saved in MATCHES)
+    window.location =
+      "scoreboard.html" +
+      "?match_id=" + d.match_id +
+      "&toss=" + toss +
+      "&batting=" + bat;
   })
   .catch(() => {
     alert("Error creating match");
