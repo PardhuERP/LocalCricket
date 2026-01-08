@@ -14,3 +14,11 @@ function addTeam() {
     })
     .catch(err => alert("Error: " + err));
 }
+function listTeams() {
+  fetch("https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec?action=listTeams")
+    .then(res => res.json())
+    .then(res => {
+      console.log(res);
+      alert(JSON.stringify(res.teams));
+    });
+}
