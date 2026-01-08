@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Create Team</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 body{font-family:Arial;background:#f2f4f8;margin:0}
 .header{background:#0a7cff;color:#fff;padding:14px;text-align:center}
@@ -14,11 +15,13 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
 </head>
 
 <body>
+
 <div class="header">🏏 Create Team</div>
 
 <div class="card">
   <input id="teamName" placeholder="Enter Team Name">
-  <button onclick="createTeam()">Create Team</button>
+  <!-- 🔒 important: type="button" -->
+  <button type="button" onclick="createTeam()">Create Team</button>
 </div>
 
 <div class="card">
@@ -29,6 +32,9 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
 <script>
 const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW1IAt-qV9VhgvdhI9722kXH0HC3cDw9lTiktWdPKXqQ/exec";
 
+/***********************
+ * LOAD TEAMS
+ ***********************/
 function loadTeams(){
   fetch(API + "?action=teams")
     .then(r => r.json())
@@ -38,10 +44,18 @@ function loadTeams(){
       d.forEach(t => {
         ul.innerHTML += `<li>${t.name}</li>`;
       });
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Failed to load teams");
     });
 }
 
+/***********************
+ * CREATE TEAM (GET)
+ ***********************/
 function createTeam(){
+
   let name = document.getElementById("teamName").value.trim();
 
   if(!name){
@@ -49,7 +63,6 @@ function createTeam(){
     return;
   }
 
-  // ✅ GET request (NO CORS issue)
   fetch(
     API +
     "?action=createTeam" +
@@ -58,17 +71,27 @@ function createTeam(){
   )
   .then(r => r.json())
   .then(res => {
-    if(res.status === "ok"){
-      document.getElementById("teamName").value = "";
-      loadTeams();
-    } else {
+
+    if(res.status !== "ok"){
       alert("Error creating team");
+      return;
     }
+
+    alert("Team created successfully ✅");
+
+    document.getElementById("teamName").value = "";
+
+    loadTeams(); // refresh list
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Network error");
   });
 }
 
 // initial load
 loadTeams();
 </script>
+
 </body>
 </html>
