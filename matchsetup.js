@@ -1,30 +1,33 @@
 const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW1IAt-qV9VhgvdhI9722kXH0HC3cDw9lTiktWdPKXqQ/exec";
 
-console.log("matchsetup.js loaded"); // DEBUG
+let TEAM_MAP = {};
 
 function loadTeams(){
   fetch(API + "?action=teams")
     .then(r => r.json())
     .then(d => {
-      let a = document.getElementById("teamA");
-      let b = document.getElementById("teamB");
-      let toss = document.getElementById("toss");
-      let bat = document.getElementById("batting");
 
-      a.innerHTML = `<option value="">Select Team A</option>`;
-      b.innerHTML = `<option value="">Select Team B</option>`;
+      let teamA = document.getElementById("teamA");
+      let teamB = document.getElementById("teamB");
+
+      teamA.innerHTML = `<option value="">Select Team A</option>`;
+      teamB.innerHTML = `<option value="">Select Team B</option>`;
+
+      TEAM_MAP = {};
 
       d.forEach(t => {
-        a.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-        b.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+        TEAM_MAP[t.id] = t.name;
+        teamA.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+        teamB.innerHTML += `<option value="${t.id}">${t.name}</option>`;
       });
 
-      a.onchange = updateTossBat;
-      b.onchange = updateTossBat;
+      teamA.onchange = updateTossBat;
+      teamB.onchange = updateTossBat;
     });
 }
 
 function updateTossBat(){
+
   let a = document.getElementById("teamA").value;
   let b = document.getElementById("teamB").value;
 
@@ -34,18 +37,21 @@ function updateTossBat(){
   toss.innerHTML = `<option value="">Toss Winner</option>`;
   bat.innerHTML  = `<option value="">Batting First</option>`;
 
-  if(a) toss.innerHTML += `<option value="${a}">Team A</option>`;
-  if(b) toss.innerHTML += `<option value="${b}">Team B</option>`;
-  if(a) bat.innerHTML  += `<option value="${a}">Team A</option>`;
-  if(b) bat.innerHTML  += `<option value="${b}">Team B</option>`;
+  // Show options ONLY when both teams selected
+  if(a && b){
+    toss.innerHTML += `<option value="${a}">${TEAM_MAP[a]}</option>`;
+    toss.innerHTML += `<option value="${b}">${TEAM_MAP[b]}</option>`;
+
+    bat.innerHTML  += `<option value="${a}">${TEAM_MAP[a]}</option>`;
+    bat.innerHTML  += `<option value="${b}">${TEAM_MAP[b]}</option>`;
+  }
 }
 
 function createMatch(){
-  console.log("Start Match clicked"); // DEBUG
 
   let a = document.getElementById("teamA").value;
   let b = document.getElementById("teamB").value;
-  let o = document.getElementById("overs").value;
+  let overs = document.getElementById("overs").value;
   let toss = document.getElementById("toss").value;
   let bat  = document.getElementById("batting").value;
 
@@ -57,12 +63,12 @@ function createMatch(){
     alert("Team A and Team B must be different");
     return;
   }
-  if(!o || o <= 0){
+  if(!overs || overs <= 0){
     alert("Enter valid overs");
     return;
   }
   if(!toss || !bat){
-    alert("Select toss & batting");
+    alert("Select toss winner and batting first");
     return;
   }
 
@@ -73,20 +79,17 @@ function createMatch(){
       action:"createMatch",
       teamA: a,
       teamB: b,
-      overs: o
+      overs: overs
     })
   })
   .then(r => r.json())
   .then(d => {
-    console.log("Match created", d);
-    alert("Match Created: " + d.match_id);
+    alert("Match Created");
     window.location = "scoreboard.html?match_id=" + d.match_id;
   })
-  .catch(err => {
-    console.error(err);
+  .catch(() => {
     alert("Error creating match");
   });
 }
 
-// AUTO LOAD
 document.addEventListener("DOMContentLoaded", loadTeams);
