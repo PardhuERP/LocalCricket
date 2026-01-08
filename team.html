@@ -43,25 +43,27 @@ function loadTeams(){
 
 function createTeam(){
   let name = document.getElementById("teamName").value.trim();
+
   if(!name){
     alert("Enter team name");
     return;
   }
 
-  fetch(API,{
-    method:"POST",
-    headers:{ "Content-Type":"application/x-www-form-urlencoded" },
-    body:new URLSearchParams({
-      action:"createTeam",
-      team_name:name,
-      admin_id:"ADMIN"
-    })
-  })
+  // ✅ GET request (NO CORS issue)
+  fetch(
+    API +
+    "?action=createTeam" +
+    "&team_name=" + encodeURIComponent(name) +
+    "&admin_id=ADMIN"
+  )
   .then(r => r.json())
   .then(res => {
-    alert("Team created successfully");
-    document.getElementById("teamName").value = "";
-    loadTeams(); // refresh list
+    if(res.status === "ok"){
+      document.getElementById("teamName").value = "";
+      loadTeams();
+    } else {
+      alert("Error creating team");
+    }
   });
 }
 
