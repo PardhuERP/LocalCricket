@@ -42,6 +42,9 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
 <script>
 const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW1IAt-qV9VhgvdhI9722kXH0HC3cDw9lTiktWdPKXqQ/exec";
 
+/***********************
+ * LOAD TEAMS
+ ***********************/
 function loadTeams(){
   fetch(API + "?action=teams")
     .then(r => r.json())
@@ -49,13 +52,15 @@ function loadTeams(){
       let sel = document.getElementById("team");
       sel.innerHTML = `<option value="">Select Team</option>`;
 
-d.forEach(t => {
-  sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-});
-      loadPlayers(); // auto load players of first team
+      d.forEach(t => {
+        sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+      });
     });
 }
 
+/***********************
+ * LOAD PLAYERS
+ ***********************/
 function loadPlayers(){
   let team = document.getElementById("team").value;
   if(!team) return;
@@ -65,45 +70,52 @@ function loadPlayers(){
     .then(d => {
       let ul = document.getElementById("players");
       ul.innerHTML = "";
+
       d.forEach(p => {
         ul.innerHTML += `<li>${p.name} <small>(${p.role || "-"})</small></li>`;
       });
     });
 }
 
+/***********************
+ * ADD PLAYER (GET)
+ ***********************/
 function addPlayer(){
+
   let team = document.getElementById("team").value;
   let name = document.getElementById("playerName").value.trim();
   let role = document.getElementById("role").value;
 
   if(!team){
-  alert("Select team");
-  return;
-}
-if(!name){
-  alert("Enter player name");
-  return;
-}
-if(!role){
-  alert("Select role");
-  return;
-}
+    alert("Select team");
+    return;
+  }
+  if(!name){
+    alert("Enter player name");
+    return;
+  }
+  if(!role){
+    alert("Select role");
+    return;
+  }
 
-  fetch(API,{
-    method:"POST",
-    headers:{ "Content-Type":"application/x-www-form-urlencoded" },
-    body:new URLSearchParams({
-      action:"addPlayer",
-      team_id: team,
-      player_name: name,
-      role: role
-    })
-  })
+  // ✅ GET request (NO CORS ISSUE)
+  fetch(
+    API +
+    "?action=addPlayer" +
+    "&team_id=" + team +
+    "&player_name=" + encodeURIComponent(name) +
+    "&role=" + role
+  )
   .then(r => r.json())
-  .then(() => {
-    document.getElementById("playerName").value="";
-    document.getElementById("role").value="";
-    loadPlayers();
+  .then(res => {
+    if(res.status === "ok"){
+      document.getElementById("playerName").value = "";
+      document.getElementById("role").value = "";
+      loadPlayers();
+    } else {
+      alert("Error adding player");
+    }
   });
 }
 
