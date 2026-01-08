@@ -81,7 +81,6 @@ function loadPlayers(){
  * ADD PLAYER (GET)
  ***********************/
 function addPlayer(){
-
   let team = document.getElementById("team").value;
   let name = document.getElementById("playerName").value.trim();
   let role = document.getElementById("role").value;
@@ -99,36 +98,23 @@ function addPlayer(){
     return;
   }
 
-  fetch(
-    API +
-    "?action=addPlayer" +
-    "&team_id=" + team +
-    "&player_name=" + encodeURIComponent(name) +
-    "&role=" + encodeURIComponent(role) +
-    "&t=" + Date.now() // 🔥 cache buster
-  )
-  .then(r => r.json())
-  .then(res => {
-
-    if(res.status !== "ok"){
-      alert("Error adding player");
-      return;
-    }
-
-    alert("Player added ✅");
-
-    document.getElementById("playerName").value = "";
-    document.getElementById("role").value = "";
-
-    loadPlayers(); // 🔁 reload list
+  fetch(API,{
+    method:"POST",
+    headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+    body:new URLSearchParams({
+      action:"addPlayer",
+      team_id: team,
+      player_name: name,
+      role: role
+    })
   })
-  .catch(err => {
-    console.error(err);
-    alert("Network error");
+  .then(r => r.json())
+  .then(() => {
+    document.getElementById("playerName").value="";
+    document.getElementById("role").value="";
+    loadPlayers();
   });
 }
-document.getElementById("team").onchange = loadPlayers;
-loadTeams();
 </script>
   
 </body>
