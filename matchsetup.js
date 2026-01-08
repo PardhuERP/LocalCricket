@@ -87,13 +87,37 @@ function createMatch(){
     "&teamB=" + teamB +
     "&overs=" + overs
   )
-  .then(r => r.json())
-  .then(d => {
+  .then(r => r.text())               // 🔥 FIX
+  .then(txt => {
+
+    console.log("RAW RESPONSE:", txt);
+
+    let d;
+    try {
+      d = JSON.parse(txt);
+    } catch(e){
+      alert("Invalid server response");
+      return;
+    }
 
     if(!d.match_id){
       alert("Match ID missing");
       return;
     }
+
+    // ✅ Redirect with ALL required params
+    window.location =
+      "scoreboard.html" +
+      "?match_id=" + d.match_id +
+      "&teamA=" + teamA +
+      "&teamB=" + teamB +
+      "&batting=" + bat;
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Error creating match");
+  });
+}
 
     // ✅ PASS ALL REQUIRED PARAMS
     window.location =
