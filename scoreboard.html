@@ -2,65 +2,58 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Live Scoreboard</title>
+<title>Scoreboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:Arial;margin:0;background:#f2f4f8}
-.header{background:#0a7cff;color:#fff;padding:14px;text-align:center;font-size:18px}
-.card{background:#fff;margin:10px;padding:12px;border-radius:8px}
-.score{font-size:26px;font-weight:bold;text-align:center}
-.row{display:flex;justify-content:space-between;margin-top:6px}
-.buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px}
-button{padding:14px;font-size:16px;border:none;border-radius:6px}
-.run{background:#e0e0e0}
-.action{background:#ff5252;color:#fff}
-.extra{background:#ffc107}
-.hidden{display:none}
+body{font-family:Arial;background:#f2f4f8;margin:0}
+.header{background:#0a7cff;color:#fff;padding:14px;text-align:center}
+.card{background:#fff;margin:12px;padding:12px;border-radius:8px}
+.row{margin:6px 0}
+button{padding:10px;margin:4px;border:none;border-radius:6px;background:#0a7cff;color:#fff}
+.btns button{width:60px}
 </style>
 </head>
 
 <body>
 
-<div class="header">🏏 Live Match</div>
+<div class="header">🏏 Scoreboard</div>
 
-<div class="card">
-  <div class="score" id="score">0/0 (0.0)</div>
+<!-- START MATCH SETUP -->
+<div class="card" id="startMatchBox">
+  <h3>Start Match</h3>
+
   <div class="row">
-    <div>Striker: <b id="striker">-</b></div>
-    <div>Non-Striker: <b id="nonstriker">-</b></div>
+    <select id="striker"></select>
   </div>
   <div class="row">
-    <div>Bowler: <b id="bowler">-</b></div>
+    <select id="nonStriker"></select>
   </div>
+  <div class="row">
+    <select id="bowler"></select>
+  </div>
+
+  <button onclick="startMatch()">Start Match</button>
 </div>
 
-<!-- RUN BUTTONS -->
-<div class="buttons" id="runButtons">
-  <button class="run" onclick="sendBall(0,0)">0</button>
-  <button class="run" onclick="sendBall(1,1)">1</button>
-  <button class="run" onclick="sendBall(2,2)">2</button>
-  <button class="run" onclick="sendBall(3,3)">3</button>
-  <button class="run" onclick="sendBall(4,4)">4</button>
-  <button class="run" onclick="sendBall(6,6)">6</button>
-  <button class="extra" onclick="sendBall('WIDE',0)">Wide</button>
-  <button class="extra" onclick="sendBall('NO_BALL',0)">No Ball</button>
-  <button class="action" onclick="sendBall('WICKET',0)">Wicket</button>
-  <button style="background:#555;color:#fff" onclick="undo()">UNDO</button>
-</div>
+<!-- LIVE SCORE -->
+<div class="card" id="scoringBox" style="display:none">
+  <h2 id="score">0/0 (0.0)</h2>
+  <p>Striker: <span id="sName">-</span></p>
+  <p>Non-Striker: <span id="nsName">-</span></p>
+  <p>Bowler: <span id="bName">-</span></p>
 
-<!-- BATSMAN SELECT -->
-<div class="card hidden" id="batsmanBox">
-  <b>Select New Batsman</b><br><br>
-  <button onclick="selectBatsman('P3')">P3</button>
-  <button onclick="selectBatsman('P4')">P4</button>
-</div>
-
-<!-- BOWLER SELECT -->
-<div class="card hidden" id="bowlerBox">
-  <b>Select New Bowler</b><br><br>
-  <button onclick="selectBowler('P11')">P11</button>
-  <button onclick="selectBowler('P12')">P12</button>
+  <div class="btns">
+    <button onclick="ball(0)">0</button>
+    <button onclick="ball(1)">1</button>
+    <button onclick="ball(2)">2</button>
+    <button onclick="ball(4)">4</button>
+    <button onclick="ball(6)">6</button>
+    <button onclick="extra('WIDE')">Wd</button>
+    <button onclick="extra('NO_BALL')">Nb</button>
+    <button onclick="wicket()">W</button>
+    <button onclick="undo()">Undo</button>
+  </div>
 </div>
 
 <script src="scoreboard.js"></script>
