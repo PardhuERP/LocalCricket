@@ -159,11 +159,28 @@ function addWicket() {
   callAction(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`);
 }
 function undoBall() {
+  console.log("UNDO CLICKED");
+
+  // 🔴 FULL UI RESET (VERY IMPORTANT)
   popupActive = false;
   popupMode = null;
-  wicketOverStep = null;
+  lastHandledEventKey = null;
+
   closePopup();
-  callAction(`${API}?action=undoBall&matchId=${MATCH_ID}`, true);
+
+  // 🚨 force undo API
+  fetch(`${API}?action=undoBall&matchId=${MATCH_ID}`)
+    .then(r => r.json())
+    .then(res => {
+      console.log("Undo response:", res);
+
+      // ⏳ slight delay so backend settle avutundi
+      setTimeout(loadLiveScore, 200);
+    })
+    .catch(err => console.error("Undo error:", err))
+    .finally(() => {
+      actionInProgress = false;
+    });
 }
 
 /* =========================
