@@ -95,15 +95,25 @@ function openPopup(mode, title){
   popupActive = true;
 
   el("popupTitle").innerText = title;
-  el("popupSelect").innerHTML = `
-    <option value="">-- Select --</option>
-    <option value="PLAYER_1">PLAYER_1</option>
-    <option value="PLAYER_2">PLAYER_2</option>
-    <option value="PLAYER_3">PLAYER_3</option>
-  `;
 
+  let options = `<option value="">-- Select --</option>`;
+
+  if (mode === "BATSMAN") {
+    TEST_BATSMEN.forEach(p => {
+      options += `<option value="${p}">${p}</option>`;
+    });
+  }
+
+  if (mode === "BOWLER") {
+    TEST_BOWLERS.forEach(p => {
+      options += `<option value="${p}">${p}</option>`;
+    });
+  }
+
+  el("popupSelect").innerHTML = options;
   el("popup").classList.remove("hidden");
 }
+
 
 function closePopup(){
   popupMode = null;
