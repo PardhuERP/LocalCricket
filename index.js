@@ -28,6 +28,10 @@ const TEST_BOWLERS = [
   "BOWLER_4"
 ];
 
+
+let uiStriker = null;
+let uiNonStriker = null;
+let uiBowler = null;
 /* =========================
    HELPERS
 ========================= */
@@ -50,9 +54,9 @@ function loadLiveScore() {
 
       el("score").innerText = `${d.totalRuns} / ${d.wickets}`;
       el("overs").innerText = `Overs: ${d.over}.${d.ball}`;
-      el("striker").innerText = d.strikerId;
-      el("nonStriker").innerText = d.nonStrikerId;
-      el("bowler").innerText = d.bowlerId;
+    el("striker").innerText = uiStriker || d.strikerId;
+el("nonStriker").innerText = uiNonStriker || d.nonStrikerId;
+el("bowler").innerText = uiBowler || d.bowlerId;
       el("state").innerText = d.state;
 
       handleStateUI(d.state);
