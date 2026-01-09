@@ -1,15 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Local Cricket</title>
+  <title>Live Score</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h2>Local Cricket – Test</h2>
+  <div class="scoreboard">
+    <h2 id="score">0 / 0</h2>
+    <div id="overs">Overs: 0.0</div>
 
-  <button onclick="addTeam()">Add Team Test</button>
-  <button onclick="listTeams()">List Teams</button>
+    <hr>
+
+    <div>
+      <strong>Striker:</strong> <span id="striker">-</span>
+    </div>
+    <div>
+      <strong>Non-Striker:</strong> <span id="nonStriker">-</span>
+    </div>
+    <div>
+      <strong>Bowler:</strong> <span id="bowler">-</span>
+    </div>
+
+    <div id="state" class="state">NORMAL</div>
+  </div>
+
   <script src="index.js"></script>
 </body>
 </html>
