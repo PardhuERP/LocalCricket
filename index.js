@@ -23,10 +23,10 @@ function loadLiveScore() {
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
     .then(res => res.json())
     .then(data => {
-      if (data.status !== "ok") {
-        console.warn("LiveState error:", data);
-        return;
-      }
+  if (data.status !== "ok") {
+    if (el("state")) el("state").innerText = "WAITING...";
+    return;
+  }
 
       if (el("score")) {
         el("score").innerText = `${data.totalRuns} / ${data.wickets}`;
