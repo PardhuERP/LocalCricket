@@ -65,6 +65,7 @@
     background: #e3f2fd;
     color: #0a7cff;
   }
+
 </style>
 </head>
 
@@ -93,6 +94,29 @@
 
   <div class="state" id="state">NORMAL</div>
 </div>
+  <div class="buttons">
+    <div class="row-btn">
+      <button onclick="addRun(0)">0</button>
+      <button onclick="addRun(1)">1</button>
+      <button onclick="addRun(2)">2</button>
+    </div>
+
+    <div class="row-btn">
+      <button onclick="addRun(3)">3</button>
+      <button onclick="addRun(4)">4</button>
+      <button onclick="addRun(6)">6</button>
+    </div>
+
+    <div class="row-btn">
+      <button class="extra" onclick="addExtra('WD')">WD</button>
+      <button class="extra" onclick="addExtra('NB')">NB</button>
+      <button class="wicket" onclick="addWicket()">W</button>
+    </div>
+
+    <div class="row-btn">
+      <button class="undo" onclick="undoBall()">UNDO</button>
+    </div>
+  </div>
 
 <script src="index.js"></script>
 </body>
