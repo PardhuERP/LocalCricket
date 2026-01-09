@@ -6,17 +6,23 @@ let popupMode = null;
 let popupActive = false;
 let lastHandledEventKey = null;
 
-// ✅ EVENT LOCKS
-let lastWicketCount = null;
-let lastOverForBowlerPopup = null;
-let wicketOverStep = null; // null | "BATSMAN_DONE"
-
+/* =========================
+   HELPERS
+========================= */
 function el(id) {
   return document.getElementById(id);
 }
 
+function postAction(payload) {
+  return fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  }).then(r => r.json());
+}
+
 /* =========================
-   LOAD LIVE SCORE
+   LOAD LIVE SCORE (GET ONLY)
 ========================= */
 function loadLiveScore() {
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
@@ -40,38 +46,36 @@ function loadLiveScore() {
 }
 
 /* =========================
-   STATE CONTROLLER (FINAL)
+   STATE CONTROLLER
 ========================= */
 function handleStateUI(d) {
   if (popupActive) return;
 
   const eventKey = `${d.over}-${d.ball}-${d.wickets}-${d.state}`;
-
-  // ⛔ prevent handling same event twice
   if (eventKey === lastHandledEventKey) return;
 
-  // 🟡 normal wicket
+  // 🟡 WICKET
   if (d.state === "WICKET") {
     lastHandledEventKey = eventKey;
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
-  // 🟡 6th ball wicket (first batsman popup)
+  // 🟡 6th BALL WICKET
   if (d.state === "WICKET_OVER_END") {
     lastHandledEventKey = eventKey;
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
-  // 🟢 over end (after batsman is set)
+  // 🟢 OVER END (after batsman set)
   if (d.state === "OVER_END") {
     lastHandledEventKey = eventKey;
     openPopup("BOWLER", "Select New Bowler");
     return;
   }
 
-  // 🔄 normal play resumed
+  // 🔄 NORMAL
   if (d.state === "NORMAL") {
     lastHandledEventKey = null;
     closePopup();
@@ -111,76 +115,73 @@ function confirmPopup() {
 
   // 🟡 BATSMAN
   if (popupMode === "BATSMAN") {
-  console.log("New batsman:", v);
+    postAction({
+      action: "setNewBatsman",
+      matchId: MATCH_ID,
+      newBatsmanId: v
+    }).then(loadLiveScore);
 
-  callAction(
-    `${API}?action=setNewBatsman&matchId=${MATCH_ID}&newBatsmanId=${v}`,
-    true
-  );
-
-  closePopup();
-  return;
-}
+    closePopup();
+    return;
+  }
 
   // 🟢 BOWLER
   if (popupMode === "BOWLER") {
-    callAction(
-      `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
-      true
-    );
+    postAction({
+      action: "changeBowler",
+      matchId: MATCH_ID,
+      newBowlerId: v
+    }).then(loadLiveScore);
+
     closePopup();
   }
 }
 
 /* =========================
-   API CALL HANDLER
-========================= */
-function callAction(url, force = false) {
-  if (actionInProgress && !force) return;
-
-  actionInProgress = true;
-  fetch(url)
-    .then(() => loadLiveScore())
-    .finally(() => {
-      setTimeout(() => (actionInProgress = false), 300);
-    });
-}
-
-/* =========================
-   BUTTON ACTIONS
+   BUTTON ACTIONS (POST ONLY)
 ========================= */
 function addRun(r) {
-  callAction(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`);
+  postAction({
+    action: "addRun",
+    matchId: MATCH_ID,
+    runs: r
+  }).then(loadLiveScore);
 }
+
 function addExtra(t) {
-  callAction(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${t}`);
+  postAction({
+    action: "addExtra",
+    matchId: MATCH_ID,
+    type: t
+  }).then(loadLiveScore);
 }
+
 function addWicket() {
-  callAction(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`);
+  postAction({
+    action: "addWicket",
+    matchId: MATCH_ID,
+    wicketType: "BOWLED"
+  }).then(loadLiveScore);
 }
+
 function undoBall() {
   console.log("UNDO CLICKED");
 
-  // 🔴 FULL UI RESET (VERY IMPORTANT)
+  // 🔴 FULL UI RESET
   popupActive = false;
   popupMode = null;
   lastHandledEventKey = null;
-
   closePopup();
 
-  // 🚨 force undo API
-  fetch(`${API}?action=undoBall&matchId=${MATCH_ID}`)
-    .then(r => r.json())
-    .then(res => {
-      console.log("Undo response:", res);
-
-      // ⏳ slight delay so backend settle avutundi
-      setTimeout(loadLiveScore, 200);
-    })
-    .catch(err => console.error("Undo error:", err))
-    .finally(() => {
-      actionInProgress = false;
-    });
+  postAction({
+    action: "undoBall",
+    matchId: MATCH_ID
+  })
+  .then(res => {
+    console.log("Undo response:", res);
+    setTimeout(loadLiveScore, 200);
+  })
+  .catch(err => console.error("Undo error:", err));
 }
 
 /* =========================
