@@ -45,46 +45,35 @@ function loadLiveScore() {
 function handleStateUI(d) {
   if (popupActive) return;
 
-  /* 🟡 EVERY WICKET */
-  if (d.state === "WICKET" && d.wickets !== lastWicketCount) {
-    lastWicketCount = d.wickets;
+  const eventKey = `${d.over}-${d.ball}-${d.wickets}-${d.state}`;
+
+  // ⛔ prevent handling same event twice
+  if (eventKey === lastHandledEventKey) return;
+
+  // 🟡 normal wicket
+  if (d.state === "WICKET") {
+    lastHandledEventKey = eventKey;
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
-  /* 🟡 6th BALL WICKET (2 STEPS) */
+  // 🟡 6th ball wicket (first batsman popup)
   if (d.state === "WICKET_OVER_END") {
-
-    // Step 1: batsman
-    if (wicketOverStep === null) {
-      lastWicketCount = d.wickets;
-      wicketOverStep = "BATSMAN_DONE_PENDING";
-      openPopup("BATSMAN", "Select New Batsman");
-      return;
-    }
-
-    // Step 2: bowler
-    if (wicketOverStep === "BATSMAN_DONE") {
-      wicketOverStep = null;
-      lastOverForBowlerPopup = d.over;
-      openPopup("BOWLER", "Select New Bowler");
-      return;
-    }
+    lastHandledEventKey = eventKey;
+    openPopup("BATSMAN", "Select New Batsman");
+    return;
   }
 
-  /* 🟢 NORMAL OVER END (BALL RESET TO 0) */
-  if (
-    d.ball === 0 &&
-    d.over !== lastOverForBowlerPopup &&
-    d.state !== "WICKET_OVER_END"
-  ) {
-    lastOverForBowlerPopup = d.over;
+  // 🟢 over end (after batsman is set)
+  if (d.state === "OVER_END") {
+    lastHandledEventKey = eventKey;
     openPopup("BOWLER", "Select New Bowler");
     return;
   }
 
-  /* 🟢 RESET */
+  // 🔄 normal play resumed
   if (d.state === "NORMAL") {
+    lastHandledEventKey = null;
     closePopup();
   }
 }
