@@ -171,7 +171,16 @@ function addWicket(){
 }
 
 function undoBall(){
-  // 🔄 RESET UI STATE
+  console.log("UNDO CLICKED");
+
+  console.log("Before reset:", {
+    popupActive,
+    popupMode,
+    lastHandledState,
+    wicketOverStep
+  });
+
+  // 🔄 FULL UI RESET
   popupActive = false;
   popupMode = null;
   lastHandledState = null;
@@ -179,10 +188,26 @@ function undoBall(){
 
   closePopup();
 
-  callAction(
-    `${API}?action=undoBall&matchId=${MATCH_ID}`,
-    true
-  );
+  console.log("After reset:", {
+    popupActive,
+    popupMode,
+    lastHandledState,
+    wicketOverStep
+  });
+
+  // 🚨 IMPORTANT: force undo even if another action is running
+  fetch(`${API}?action=undoBall&matchId=${MATCH_ID}`)
+    .then(r => r.json())
+    .then(res => {
+      console.log("UNDO API response:", res);
+
+      // 🔁 reload state AFTER undo
+      setTimeout(loadLiveScore, 200);
+    })
+    .catch(err => console.error("Undo error:", err))
+    .finally(() => {
+      actionInProgress = false; // hard release lock
+    });
 }
 
 /* =========================
