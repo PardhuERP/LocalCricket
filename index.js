@@ -4,6 +4,8 @@ const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMd
 // prevent double click
 let actionInProgress = false;
 
+let popupMode = null; // "BATSMAN" or "BOWLER"
+
 /* =========================
    SAFE DOM HELPER
 ========================= */
@@ -58,6 +60,8 @@ function loadLiveScore() {
     });
 }
 
+handleStateUI(data.state);
+
 /* =========================
    API CALL HANDLER
 ========================= */
@@ -84,6 +88,62 @@ function callAction(url, force = false) {
       }, 400);
     });
 }
+function handleStateUI(state) {
+  if (state === "WICKET") {
+    openPopup("BATSMAN", "Select New Batsman");
+  }
+  else if (state === "OVER_END") {
+    openPopup("BOWLER", "Select New Bowler");
+  }
+  else if (state === "WICKET_OVER_END") {
+    openPopup("BATSMAN", "Select New Batsman");
+  }
+  else {
+    closePopup();
+  }
+}
+
+function openPopup(mode, title) {
+  popupMode = mode;
+  el("popupTitle").innerText = title;
+
+  // TEMP demo options (replace with real players later)
+  const select = el("popupSelect");
+  select.innerHTML = `
+    <option value="">-- Select --</option>
+    <option value="PLAYER_1">PLAYER_1</option>
+    <option value="PLAYER_2">PLAYER_2</option>
+    <option value="PLAYER_3">PLAYER_3</option>
+  `;
+
+  el("popup").classList.remove("hidden");
+}
+
+function closePopup() {
+  popupMode = null;
+  el("popup").classList.add("hidden");
+}
+
+function confirmPopup() {
+  const selected = el("popupSelect").value;
+  if (!selected) return alert("Select player");
+
+  if (popupMode === "BATSMAN") {
+    // future: API to set new batsman
+    closePopup();
+    return;
+  }
+
+  if (popupMode === "BOWLER") {
+    callAction(
+      `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${selected}`,
+      true
+    );
+    closePopup();
+  }
+         }
+
+
 
 /* =========================
    BUTTON ACTIONS
