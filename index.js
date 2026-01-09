@@ -10,6 +10,21 @@ function el(id){ return document.getElementById(id); }
 let wicketOverStep = null; 
 // null | "BATSMAN_DONE" | "BOWLER_DONE"
 
+// 🧪 TEST PLAYERS (TEMP – UI ONLY)
+const TEST_BATSMEN = [
+  "BATSMAN_1",
+  "BATSMAN_2",
+  "BATSMAN_3",
+  "BATSMAN_4"
+];
+
+const TEST_BOWLERS = [
+  "BOWLER_1",
+  "BOWLER_2",
+  "BOWLER_3",
+  "BOWLER_4"
+];
+
 /* =========================
    LOAD LIVE SCORE
 ========================= */
