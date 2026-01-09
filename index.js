@@ -23,10 +23,11 @@ function loadLiveScore() {
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
     .then(res => res.json())
     .then(data => {
-  if (data.status !== "ok") {
-    if (el("state")) el("state").innerText = "WAITING...";
-    return;
-  }
+
+      if (data.status !== "ok") {
+        if (el("state")) el("state").innerText = "WAITING...";
+        return;
+      }
 
       if (el("score")) {
         el("score").innerText = `${data.totalRuns} / ${data.wickets}`;
@@ -117,6 +118,14 @@ function undoBall() {
 ========================= */
 window.onload = function () {
   console.log("Page loaded, starting live score");
+
+  // ✅ PLACEHOLDERS (NEWLY ADDED – DO NOT REMOVE)
+  if (el("score")) el("score").innerText = "-- / --";
+  if (el("overs")) el("overs").innerText = "Overs: --.-";
+  if (el("striker")) el("striker").innerText = "-";
+  if (el("nonStriker")) el("nonStriker").innerText = "-";
+  if (el("bowler")) el("bowler").innerText = "-";
+  if (el("state")) el("state").innerText = "WAITING...";
 
   loadLiveScore();
 
