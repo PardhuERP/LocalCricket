@@ -7,6 +7,8 @@ let popupActive = false;
 let lastHandledState = null;   // ✅ ADDED (VERY IMPORTANT)
 
 function el(id){ return document.getElementById(id); }
+let wicketOverStep = null; 
+// null | "BATSMAN_DONE" | "BOWLER_DONE"
 
 /* =========================
    LOAD LIVE SCORE
