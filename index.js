@@ -56,8 +56,15 @@ function loadLiveScore() {
 }
 
 // auto refresh
-setInterval(loadLiveScore, 2000);
-loadLiveScore();
+window.onload = function () {
+  console.log("UI loaded, starting live score polling");
+
+  loadLiveScore();
+
+  setInterval(() => {
+    loadLiveScore();
+  }, 2000);
+};
 
 /* =========================
    GENERIC ACTION CALLER
