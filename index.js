@@ -4,11 +4,17 @@ const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMd
 let actionInProgress = false;
 let popupMode = null;
 let popupActive = false;
-let lastHandledState = null;   // ✅ ADDED (VERY IMPORTANT)
 
-function el(id){ return document.getElementById(id); }
-let wicketOverStep = null; 
-// null | "BATSMAN_DONE" | "BOWLER_DONE"
+// ✅ EVENT GUARDS (VERY IMPORTANT)
+let lastBallKey = null;     // `${over}.${ball}`
+let lastWicketCount = null;
+
+let wicketOverStep = null; // null | "BATSMAN_DONE"
+
+/* =========================
+   HELPERS
+========================= */
+function el(id) { return document.getElementById(id); }
 
 /* =========================
    LOAD LIVE SCORE
@@ -30,44 +36,63 @@ function loadLiveScore() {
       el("bowler").innerText = d.bowlerId;
       el("state").innerText = d.state;
 
-      handleStateUI(d.state);
+      handleStateUI(d);
     })
     .catch(err => console.error("Live score error:", err));
 }
 
 /* =========================
-   STATE CONTROLLER
+   STATE CONTROLLER (FINAL)
 ========================= */
-function handleStateUI(state){
+function handleStateUI(d) {
   if (popupActive) return;
 
-  if (state === "WICKET") {
-    if (lastHandledState === "WICKET") return;
-    lastHandledState = "WICKET";
+  const ballKey = `${d.over}.${d.ball}`;
+
+  // 🟡 WICKET EVENT (EVERY TIME)
+  if (
+    d.state === "WICKET" &&
+    d.wickets !== lastWicketCount
+  ) {
+    lastWicketCount = d.wickets;
     openPopup("BATSMAN", "Select New Batsman");
+    return;
   }
 
-  else if (state === "OVER_END") {
-    if (lastHandledState === "OVER_END") return;
-    lastHandledState = "OVER_END";
+  // 🟡 OVER END EVENT (EVERY OVER)
+  if (
+    d.state === "OVER_END" &&
+    ballKey !== lastBallKey
+  ) {
+    lastBallKey = ballKey;
     openPopup("BOWLER", "Select New Bowler");
+    return;
   }
 
-  else if (state === "WICKET_OVER_END") {
-    // 🧠 TWO-STEP FLOW
+  // 🟡 6th BALL WICKET (2 STEP)
+  if (d.state === "WICKET_OVER_END") {
+
+    // Step 1: batsman
     if (wicketOverStep === null) {
+      lastWicketCount = d.wickets;
       wicketOverStep = "BATSMAN_DONE_PENDING";
       openPopup("BATSMAN", "Select New Batsman");
+      return;
     }
-    else if (wicketOverStep === "BATSMAN_DONE") {
-      wicketOverStep = "BOWLER_DONE_PENDING";
+
+    // Step 2: bowler
+    if (wicketOverStep === "BATSMAN_DONE") {
+      wicketOverStep = null;
+      lastBallKey = ballKey;
       openPopup("BOWLER", "Select New Bowler");
+      return;
     }
   }
 
-  else {
-    lastHandledState = null;
-    wicketOverStep = null;   // ✅ RESET
+  // 🟢 NORMAL RESET
+  if (d.state === "NORMAL") {
+    lastBallKey = ballKey;
+    wicketOverStep = null;
     closePopup();
   }
 }
@@ -75,7 +100,7 @@ function handleStateUI(state){
 /* =========================
    POPUP CONTROL
 ========================= */
-function openPopup(mode, title){
+function openPopup(mode, title) {
   popupMode = mode;
   popupActive = true;
 
@@ -90,7 +115,7 @@ function openPopup(mode, title){
   el("popup").classList.remove("hidden");
 }
 
-function closePopup(){
+function closePopup() {
   popupMode = null;
   popupActive = false;
   el("popup").classList.add("hidden");
@@ -99,43 +124,26 @@ function closePopup(){
 /* =========================
    POPUP CONFIRM
 ========================= */
-function confirmPopup(){
+function confirmPopup() {
   const v = el("popupSelect").value;
-  if (!v) {
-    alert("Please select player");
-    return;
-  }
+  if (!v) return alert("Please select player");
 
-  // 🟡 WICKET OVER – BATSMAN STEP
-  if (popupMode === "BATSMAN" && el("state").innerText === "WICKET_OVER_END") {
-  console.log("New batsman selected:", v);
-  wicketOverStep = "BATSMAN_DONE";
-  lastHandledState = null;   // ✅ ADD
-  closePopup();
-  return;
-}
-
-  // 🟡 NORMAL WICKET
+  // 🟡 BATSMAN
   if (popupMode === "BATSMAN") {
-    console.log("New batsman selected:", v);
-    lastHandledState = "WICKET";
+    console.log("New batsman:", v);
+    if (el("state").innerText === "WICKET_OVER_END") {
+      wicketOverStep = "BATSMAN_DONE";
+    }
     closePopup();
     return;
   }
 
-  // 🟢 BOWLER (NORMAL + WICKET_OVER_END)
+  // 🟢 BOWLER
   if (popupMode === "BOWLER") {
     callAction(
       `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
       true
     );
-
-    if (el("state").innerText === "WICKET_OVER_END") {
-      wicketOverStep = "BOWLER_DONE";
-    } else {
-      lastHandledState = "OVER_END";
-    }
-
     closePopup();
   }
 }
@@ -143,14 +151,12 @@ function confirmPopup(){
 /* =========================
    API CALL HANDLER
 ========================= */
-function callAction(url, force = false){
+function callAction(url, force = false) {
   if (actionInProgress && !force) return;
-
   actionInProgress = true;
 
   fetch(url)
     .then(() => loadLiveScore())
-    .catch(err => console.error("Action error:", err))
     .finally(() => {
       setTimeout(() => actionInProgress = false, 300);
     });
@@ -159,56 +165,21 @@ function callAction(url, force = false){
 /* =========================
    BUTTON ACTIONS
 ========================= */
-function addRun(r){
+function addRun(r) {
   callAction(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`);
 }
-
-function addExtra(t){
+function addExtra(t) {
   callAction(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${t}`);
 }
-
-function addWicket(){
+function addWicket() {
   callAction(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`);
 }
-
-function undoBall(){
-  console.log("UNDO CLICKED");
-
-  console.log("Before reset:", {
-    popupActive,
-    popupMode,
-    lastHandledState,
-    wicketOverStep
-  });
-
-  // 🔄 FULL UI RESET
+function undoBall() {
   popupActive = false;
   popupMode = null;
-  lastHandledState = null;
   wicketOverStep = null;
-
   closePopup();
-
-  console.log("After reset:", {
-    popupActive,
-    popupMode,
-    lastHandledState,
-    wicketOverStep
-  });
-
-  // 🚨 IMPORTANT: force undo even if another action is running
-  fetch(`${API}?action=undoBall&matchId=${MATCH_ID}`)
-    .then(r => r.json())
-    .then(res => {
-      console.log("UNDO API response:", res);
-
-      // 🔁 reload state AFTER undo
-      setTimeout(loadLiveScore, 200);
-    })
-    .catch(err => console.error("Undo error:", err))
-    .finally(() => {
-      actionInProgress = false; // hard release lock
-    });
+  callAction(`${API}?action=undoBall&matchId=${MATCH_ID}`, true);
 }
 
 /* =========================
