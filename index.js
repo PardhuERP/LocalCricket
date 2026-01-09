@@ -9,35 +9,25 @@ let popupMode = null;
 let popupActive = false;
 let lastHandledState = null;
 let wicketOverStep = null; 
-// null | "BATSMAN_DONE" | "BOWLER_DONE"
+// null | "BATSMAN_PENDING" | "BATSMAN_DONE" | "BOWLER_PENDING"
 
 /* =========================
    TEST PLAYERS (MANUAL)
 ========================= */
-const TEST_BATSMEN = [
-  "BATSMAN_1",
-  "BATSMAN_2",
-  "BATSMAN_3",
-  "BATSMAN_4"
-];
+const TEST_BATSMEN = ["BATSMAN_1","BATSMAN_2","BATSMAN_3","BATSMAN_4"];
+const TEST_BOWLERS = ["BOWLER_1","BOWLER_2","BOWLER_3","BOWLER_4"];
 
-const TEST_BOWLERS = [
-  "BOWLER_1",
-  "BOWLER_2",
-  "BOWLER_3",
-  "BOWLER_4"
-];
-
-
+/* =========================
+   UI OVERRIDES (TEST ONLY)
+========================= */
 let uiStriker = null;
 let uiNonStriker = null;
 let uiBowler = null;
+
 /* =========================
    HELPERS
 ========================= */
-function el(id){
-  return document.getElementById(id);
-}
+function el(id){ return document.getElementById(id); }
 
 /* =========================
    LOAD LIVE SCORE
@@ -54,9 +44,12 @@ function loadLiveScore() {
 
       el("score").innerText = `${d.totalRuns} / ${d.wickets}`;
       el("overs").innerText = `Overs: ${d.over}.${d.ball}`;
-    el("striker").innerText = uiStriker || d.strikerId;
-el("nonStriker").innerText = uiNonStriker || d.nonStrikerId;
-el("bowler").innerText = uiBowler || d.bowlerId;
+
+      // ✅ UI override first, backend fallback
+      el("striker").innerText = uiStriker || d.strikerId;
+      el("nonStriker").innerText = uiNonStriker || d.nonStrikerId;
+      el("bowler").innerText = uiBowler || d.bowlerId;
+
       el("state").innerText = d.state;
 
       handleStateUI(d.state);
@@ -70,7 +63,6 @@ el("bowler").innerText = uiBowler || d.bowlerId;
 function handleStateUI(state){
   if (popupActive) return;
 
-  // NORMAL STATE
   if (state === "NORMAL") {
     lastHandledState = null;
     wicketOverStep = null;
@@ -78,7 +70,6 @@ function handleStateUI(state){
     return;
   }
 
-  // NORMAL WICKET
   if (state === "WICKET") {
     if (lastHandledState === "WICKET") return;
     lastHandledState = "WICKET";
@@ -86,7 +77,6 @@ function handleStateUI(state){
     return;
   }
 
-  // OVER END
   if (state === "OVER_END") {
     if (lastHandledState === "OVER_END") return;
     lastHandledState = "OVER_END";
@@ -94,14 +84,12 @@ function handleStateUI(state){
     return;
   }
 
-  // 6th BALL WICKET
   if (state === "WICKET_OVER_END") {
     if (wicketOverStep === null) {
       wicketOverStep = "BATSMAN_PENDING";
       openPopup("BATSMAN", "Select New Batsman");
       return;
     }
-
     if (wicketOverStep === "BATSMAN_DONE") {
       wicketOverStep = "BOWLER_PENDING";
       openPopup("BOWLER", "Select New Bowler");
@@ -122,15 +110,10 @@ function openPopup(mode, title){
   let options = `<option value="">-- Select --</option>`;
 
   if (mode === "BATSMAN") {
-    TEST_BATSMEN.forEach(p => {
-      options += `<option value="${p}">${p}</option>`;
-    });
+    TEST_BATSMEN.forEach(p => options += `<option value="${p}">${p}</option>`);
   }
-
   if (mode === "BOWLER") {
-    TEST_BOWLERS.forEach(p => {
-      options += `<option value="${p}">${p}</option>`;
-    });
+    TEST_BOWLERS.forEach(p => options += `<option value="${p}">${p}</option>`);
   }
 
   el("popupSelect").innerHTML = options;
@@ -148,42 +131,34 @@ function closePopup(){
 ========================= */
 function confirmPopup(){
   const v = el("popupSelect").value;
-  if (!v) {
-    alert("Please select player");
-    return;
-  }
+  if (!v) return alert("Please select player");
 
-  // 6th BALL – BATSMAN
-  if (popupMode === "BATSMAN" && el("state").innerText === "WICKET_OVER_END") {
-    console.log("6th ball new batsman:", v);
-    wicketOverStep = "BATSMAN_DONE";
-    closePopup();
-    return;
-  }
-
-  // NORMAL WICKET
-  if (popupMode === "BATSMAN") {
-    console.log("New batsman:", v);
+  // 🟡 BATSMAN (NORMAL)
+  if (popupMode === "BATSMAN" && el("state").innerText === "WICKET") {
+    uiStriker = v;                    // ✅ UI UPDATE
     lastHandledState = "WICKET";
     closePopup();
     return;
   }
 
-  // BOWLER CHANGE
+  // 🟡 BATSMAN (6th BALL)
+  if (popupMode === "BATSMAN" && el("state").innerText === "WICKET_OVER_END") {
+    uiStriker = v;                    // ✅ UI UPDATE
+    wicketOverStep = "BATSMAN_DONE";
+    closePopup();
+    return;
+  }
+
+  // 🟢 BOWLER
   if (popupMode === "BOWLER") {
-    console.log("New bowler:", v);
+    uiBowler = v;                     // ✅ UI UPDATE
 
     callAction(
       `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
       true
     );
 
-    if (el("state").innerText === "WICKET_OVER_END") {
-      wicketOverStep = "BOWLER_DONE";
-    } else {
-      lastHandledState = "OVER_END";
-    }
-
+    lastHandledState = "OVER_END";
     closePopup();
   }
 }
@@ -193,35 +168,20 @@ function confirmPopup(){
 ========================= */
 function callAction(url, force = false){
   if (actionInProgress && !force) return;
-
   actionInProgress = true;
 
   fetch(url)
     .then(() => loadLiveScore())
-    .catch(err => console.error("Action error:", err))
-    .finally(() => {
-      setTimeout(() => actionInProgress = false, 300);
-    });
+    .finally(() => setTimeout(() => actionInProgress = false, 300));
 }
 
 /* =========================
    BUTTON ACTIONS
 ========================= */
-function addRun(r){
-  callAction(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`);
-}
-
-function addExtra(t){
-  callAction(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${t}`);
-}
-
-function addWicket(){
-  callAction(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`);
-}
-
-function undoBall(){
-  callAction(`${API}?action=undoBall&matchId=${MATCH_ID}`, true);
-}
+function addRun(r){ callAction(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`); }
+function addExtra(t){ callAction(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${t}`); }
+function addWicket(){ callAction(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`); }
+function undoBall(){ callAction(`${API}?action=undoBall&matchId=${MATCH_ID}`, true); }
 
 /* =========================
    INIT
