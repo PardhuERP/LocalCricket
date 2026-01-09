@@ -1,11 +1,11 @@
 const MATCH_ID = "MATCH_1767874129183";
 const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
-// prevent double click / multiple taps
+// prevent double click
 let actionInProgress = false;
 
 /* =========================
-   SAFE DOM GETTER
+   SAFE DOM HELPER
 ========================= */
 function el(id) {
   const e = document.getElementById(id);
@@ -52,22 +52,13 @@ function loadLiveScore() {
         el("state").innerText = data.state || "NORMAL";
       }
     })
-    .catch(err => console.error("loadLiveScore error:", err));
+    .catch(err => {
+      console.error("loadLiveScore error:", err);
+    });
 }
 
-// auto refresh
-window.onload = function () {
-  console.log("UI loaded, starting live score polling");
-
-  loadLiveScore();
-
-  setInterval(() => {
-    loadLiveScore();
-  }, 2000);
-};
-
 /* =========================
-   GENERIC ACTION CALLER
+   API CALL HANDLER
 ========================= */
 function callAction(url, force = false) {
   if (actionInProgress && !force) {
@@ -83,9 +74,10 @@ function callAction(url, force = false) {
       console.log("Action response:", data);
       loadLiveScore();
     })
-    .catch(err => console.error("Action error:", err))
+    .catch(err => {
+      console.error("Action error:", err);
+    })
     .finally(() => {
-      // small delay avoids accidental double tap
       setTimeout(() => {
         actionInProgress = false;
       }, 400);
@@ -115,7 +107,20 @@ function addWicket() {
 
 function undoBall() {
   callAction(
-    `${API}?action=undoBall&matchId=${MATCH_ID}`
-     true
+    `${API}?action=undoBall&matchId=${MATCH_ID}`,
+    true // force undo
   );
 }
+
+/* =========================
+   INIT AFTER PAGE LOAD
+========================= */
+window.onload = function () {
+  console.log("Page loaded, starting live score");
+
+  loadLiveScore();
+
+  setInterval(function () {
+    loadLiveScore();
+  }, 2000);
+};
