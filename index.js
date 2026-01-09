@@ -108,11 +108,12 @@ function confirmPopup(){
 
   // 🟡 WICKET OVER – BATSMAN STEP
   if (popupMode === "BATSMAN" && el("state").innerText === "WICKET_OVER_END") {
-    console.log("New batsman selected:", v);
-    wicketOverStep = "BATSMAN_DONE";
-    closePopup();
-    return;
-  }
+  console.log("New batsman selected:", v);
+  wicketOverStep = "BATSMAN_DONE";
+  lastHandledState = null;   // ✅ ADD
+  closePopup();
+  return;
+}
 
   // 🟡 NORMAL WICKET
   if (popupMode === "BATSMAN") {
