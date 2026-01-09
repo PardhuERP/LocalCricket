@@ -4,6 +4,7 @@ const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMd
 let actionInProgress = false;
 let popupMode = null;
 let popupActive = false;
+let lastHandledEventKey = null;
 
 // ✅ EVENT LOCKS
 let lastWicketCount = null;
