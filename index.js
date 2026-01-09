@@ -59,15 +59,17 @@ function handleStateUI(d) {
     return;
   }
 
-  // 🟡 OVER END EVENT (EVERY OVER)
-  if (
-    d.state === "OVER_END" &&
-    ballKey !== lastBallKey
-  ) {
-    lastBallKey = ballKey;
-    openPopup("BOWLER", "Select New Bowler");
-    return;
-  }
+  // 🟢 NORMAL OVER COMPLETION (6 BALLS)
+   let lastOverForBowlerPopup = null;
+if (
+  d.ball === 0 &&                  // new over started
+  d.over !== lastOverForBowlerPopup &&
+  d.state !== "WICKET_OVER_END"    // already handled separately
+) {
+  lastOverForBowlerPopup = d.over;
+  openPopup("BOWLER", "Select New Bowler");
+  return;
+}
 
   // 🟡 6th BALL WICKET (2 STEP)
   if (d.state === "WICKET_OVER_END") {
