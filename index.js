@@ -62,8 +62,8 @@ loadLiveScore();
 /* =========================
    GENERIC ACTION CALLER
 ========================= */
-function callAction(url) {
-  if (actionInProgress) {
+function callAction(url, force = false) {
+  if (actionInProgress && !force) {
     console.warn("Action blocked: previous action in progress");
     return;
   }
@@ -109,5 +109,6 @@ function addWicket() {
 function undoBall() {
   callAction(
     `${API}?action=undoBall&matchId=${MATCH_ID}`
+     true
   );
 }
