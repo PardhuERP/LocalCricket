@@ -1,24 +1,25 @@
-function addTeam() {
-  const url =
-    "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec" +
-    "?action=addTeam" +
-    "&teamName=TeamB" +
-    "&shortName=TB" +
-    "&city=Vizag";
+const MATCH_ID = "MATCH_1767874129183";
+const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
-  fetch(url)
+function loadLiveScore() {
+  fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
     .then(res => res.json())
-    .then(res => {
-      alert(JSON.stringify(res));
-      console.log(res);
-    })
-    .catch(err => alert("Error: " + err));
-}
-function listTeams() {
-  fetch("https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec?action=listTeams")
-    .then(res => res.json())
-    .then(res => {
-      console.log(res);
-      alert(JSON.stringify(res.teams));
+    .then(data => {
+      if (data.status !== "ok") return;
+
+      document.getElementById("score").innerText =
+        `${data.totalRuns} / ${data.wickets}`;
+
+      document.getElementById("overs").innerText =
+        `Overs: ${data.over}.${data.ball}`;
+
+      document.getElementById("striker").innerText = data.strikerId;
+      document.getElementById("nonStriker").innerText = data.nonStrikerId;
+      document.getElementById("bowler").innerText = data.bowlerId;
+      document.getElementById("state").innerText = data.state;
     });
 }
+
+// auto refresh every 2 seconds
+setInterval(loadLiveScore, 2000);
+loadLiveScore();
