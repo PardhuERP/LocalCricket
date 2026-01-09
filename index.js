@@ -171,7 +171,18 @@ function addWicket(){
 }
 
 function undoBall(){
-  callAction(`${API}?action=undoBall&matchId=${MATCH_ID}`, true);
+  // 🔄 RESET UI STATE
+  popupActive = false;
+  popupMode = null;
+  lastHandledState = null;
+  wicketOverStep = null;
+
+  closePopup();
+
+  callAction(
+    `${API}?action=undoBall&matchId=${MATCH_ID}`,
+    true
+  );
 }
 
 /* =========================
