@@ -3,7 +3,8 @@ const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMd
 
 let actionInProgress = false;
 let popupMode = null;
-let popupActive = false;   // ✅ ADDED
+let popupActive = false;
+let lastHandledState = null;   // ✅ ADDED (VERY IMPORTANT)
 
 function el(id){ return document.getElementById(id); }
 
@@ -27,7 +28,6 @@ function loadLiveScore() {
       el("bowler").innerText = d.bowlerId;
       el("state").innerText = d.state;
 
-      // ✅ ONLY HANDLE STATE IF POPUP NOT ACTIVE
       handleStateUI(d.state);
     })
     .catch(err => console.error("Live score error:", err));
@@ -37,18 +37,26 @@ function loadLiveScore() {
    STATE CONTROLLER
 ========================= */
 function handleStateUI(state){
-  if (popupActive) return;   // ✅ PREVENT LOOP
+  // 🚫 do not re-handle same state
+  if (state === lastHandledState) return;
+
+  // 🚫 do not react while popup open
+  if (popupActive) return;
 
   if (state === "WICKET") {
+    lastHandledState = "WICKET";
     openPopup("BATSMAN", "Select New Batsman");
   }
   else if (state === "OVER_END") {
+    lastHandledState = "OVER_END";
     openPopup("BOWLER", "Select New Bowler");
   }
   else if (state === "WICKET_OVER_END") {
+    lastHandledState = "WICKET_OVER_END";
     openPopup("BATSMAN", "Select New Batsman");
   }
   else {
+    lastHandledState = null;   // ✅ reset when NORMAL
     closePopup();
   }
 }
@@ -58,9 +66,9 @@ function handleStateUI(state){
 ========================= */
 function openPopup(mode, title){
   popupMode = mode;
-  popupActive = true;                  // ✅ LOCK
-  el("popupTitle").innerText = title;
+  popupActive = true;
 
+  el("popupTitle").innerText = title;
   el("popupSelect").innerHTML = `
     <option value="">-- Select --</option>
     <option value="PLAYER_1">PLAYER_1</option>
@@ -73,7 +81,7 @@ function openPopup(mode, title){
 
 function closePopup(){
   popupMode = null;
-  popupActive = false;                 // ✅ UNLOCK
+  popupActive = false;
   el("popup").classList.add("hidden");
 }
 
@@ -87,22 +95,24 @@ function confirmPopup(){
     return;
   }
 
-  // 🔹 BATSMAN (TEMP UI FIX)
+  // 🔹 BATSMAN (TEMP until backend API)
   if (popupMode === "BATSMAN") {
     console.log("New batsman selected:", v);
 
-    // TEMP: close popup only
-    // Backend API will be added next
+    // mark wicket as handled
+    lastHandledState = "WICKET";
+
     closePopup();
     return;
   }
 
-  // 🔹 BOWLER (REAL BACKEND CALL)
+  // 🔹 BOWLER
   if (popupMode === "BOWLER") {
     callAction(
       `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
       true
     );
+    lastHandledState = "OVER_END";
     closePopup();
   }
 }
