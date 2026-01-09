@@ -103,7 +103,50 @@
   .undo {
     background: #444;
   } 
+.popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
 
+.popup.hidden {
+  display: none;
+}
+
+.popup-box {
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  width: 280px;
+  text-align: center;
+}
+
+.popup-box h3 {
+  margin-top: 0;
+}
+
+.popup-box select {
+  width: 100%;
+  padding: 10px;
+  margin: 12px 0;
+  font-size: 16px;
+}
+
+.popup-box button {
+  width: 100%;
+  padding: 12px;
+  background: #0a7cff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+  
 </style>
 </head>
 
@@ -154,7 +197,19 @@
     <div class="row-btn">
       <button class="undo" onclick="undoBall()">UNDO</button>
     </div>
+    
+    <!-- POPUP OVERLAY -->
+<div id="popup" class="popup hidden">
+  <div class="popup-box">
+    <h3 id="popupTitle">Select Player</h3>
+
+    <select id="popupSelect">
+      <option value="">-- Select --</option>
+    </select>
+
+    <button onclick="confirmPopup()">CONFIRM</button>
   </div>
+</div>
 
 <script src="index.js"></script>
 </body>
