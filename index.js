@@ -39,26 +39,35 @@ function loadLiveScore() {
    STATE CONTROLLER
 ========================= */
 function handleStateUI(state){
-  // 🚫 do not re-handle same state
-  if (state === lastHandledState) return;
-
-  // 🚫 do not react while popup open
   if (popupActive) return;
 
   if (state === "WICKET") {
+    if (lastHandledState === "WICKET") return;
     lastHandledState = "WICKET";
     openPopup("BATSMAN", "Select New Batsman");
   }
+
   else if (state === "OVER_END") {
+    if (lastHandledState === "OVER_END") return;
     lastHandledState = "OVER_END";
     openPopup("BOWLER", "Select New Bowler");
   }
+
   else if (state === "WICKET_OVER_END") {
-    lastHandledState = "WICKET_OVER_END";
-    openPopup("BATSMAN", "Select New Batsman");
+    // 🧠 TWO-STEP FLOW
+    if (wicketOverStep === null) {
+      wicketOverStep = "BATSMAN_DONE_PENDING";
+      openPopup("BATSMAN", "Select New Batsman");
+    }
+    else if (wicketOverStep === "BATSMAN_DONE") {
+      wicketOverStep = "BOWLER_DONE_PENDING";
+      openPopup("BOWLER", "Select New Bowler");
+    }
   }
+
   else {
-    lastHandledState = null;   // ✅ reset when NORMAL
+    lastHandledState = null;
+    wicketOverStep = null;   // ✅ RESET
     closePopup();
   }
 }
@@ -97,24 +106,35 @@ function confirmPopup(){
     return;
   }
 
-  // 🔹 BATSMAN (TEMP until backend API)
-  if (popupMode === "BATSMAN") {
+  // 🟡 WICKET OVER – BATSMAN STEP
+  if (popupMode === "BATSMAN" && el("state").innerText === "WICKET_OVER_END") {
     console.log("New batsman selected:", v);
-
-    // mark wicket as handled
-    lastHandledState = "WICKET";
-
+    wicketOverStep = "BATSMAN_DONE";
     closePopup();
     return;
   }
 
-  // 🔹 BOWLER
+  // 🟡 NORMAL WICKET
+  if (popupMode === "BATSMAN") {
+    console.log("New batsman selected:", v);
+    lastHandledState = "WICKET";
+    closePopup();
+    return;
+  }
+
+  // 🟢 BOWLER (NORMAL + WICKET_OVER_END)
   if (popupMode === "BOWLER") {
     callAction(
       `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
       true
     );
-    lastHandledState = "OVER_END";
+
+    if (el("state").innerText === "WICKET_OVER_END") {
+      wicketOverStep = "BOWLER_DONE";
+    } else {
+      lastHandledState = "OVER_END";
+    }
+
     closePopup();
   }
 }
