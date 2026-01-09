@@ -121,15 +121,16 @@ function confirmPopup() {
 
   // 🟡 BATSMAN
   if (popupMode === "BATSMAN") {
-    console.log("New batsman:", v);
+  console.log("New batsman:", v);
 
-    if (el("state").innerText === "WICKET_OVER_END") {
-      wicketOverStep = "BATSMAN_DONE";
-    }
+  callAction(
+    `${API}?action=setNewBatsman&matchId=${MATCH_ID}&newBatsmanId=${v}`,
+    true
+  );
 
-    closePopup();
-    return;
-  }
+  closePopup();
+  return;
+}
 
   // 🟢 BOWLER
   if (popupMode === "BOWLER") {
