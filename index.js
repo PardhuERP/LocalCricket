@@ -1,50 +1,113 @@
 const MATCH_ID = "MATCH_1767874129183";
 const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+// prevent double click / multiple taps
+let actionInProgress = false;
+
+/* =========================
+   SAFE DOM GETTER
+========================= */
+function el(id) {
+  const e = document.getElementById(id);
+  if (!e) {
+    console.warn("Element not found:", id);
+    return null;
+  }
+  return e;
+}
+
+/* =========================
+   LOAD LIVE SCORE
+========================= */
 function loadLiveScore() {
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
     .then(res => res.json())
     .then(data => {
-      if (data.status !== "ok") return;
+      if (data.status !== "ok") {
+        console.warn("LiveState error:", data);
+        return;
+      }
 
-      document.getElementById("score").innerText =
-        `${data.totalRuns} / ${data.wickets}`;
+      if (el("score")) {
+        el("score").innerText = `${data.totalRuns} / ${data.wickets}`;
+      }
 
-      document.getElementById("overs").innerText =
-        `Overs: ${data.over}.${data.ball}`;
+      if (el("overs")) {
+        el("overs").innerText = `Overs: ${data.over}.${data.ball}`;
+      }
 
-      document.getElementById("striker").innerText = data.strikerId;
-      document.getElementById("nonStriker").innerText = data.nonStrikerId;
-      document.getElementById("bowler").innerText = data.bowlerId;
-      document.getElementById("state").innerText = data.state;
-    });
+      if (el("striker")) {
+        el("striker").innerText = data.strikerId || "-";
+      }
+
+      if (el("nonStriker")) {
+        el("nonStriker").innerText = data.nonStrikerId || "-";
+      }
+
+      if (el("bowler")) {
+        el("bowler").innerText = data.bowlerId || "-";
+      }
+
+      if (el("state")) {
+        el("state").innerText = data.state || "NORMAL";
+      }
+    })
+    .catch(err => console.error("loadLiveScore error:", err));
 }
 
-// auto refresh every 2 seconds
+// auto refresh
 setInterval(loadLiveScore, 2000);
 loadLiveScore();
 
+/* =========================
+   GENERIC ACTION CALLER
+========================= */
+function callAction(url) {
+  if (actionInProgress) {
+    console.warn("Action blocked: previous action in progress");
+    return;
+  }
 
-function addRun(runs) {
-  fetch(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${runs}`)
+  actionInProgress = true;
+
+  fetch(url)
     .then(res => res.json())
-    .then(() => loadLiveScore());
+    .then(data => {
+      console.log("Action response:", data);
+      loadLiveScore();
+    })
+    .catch(err => console.error("Action error:", err))
+    .finally(() => {
+      // small delay avoids accidental double tap
+      setTimeout(() => {
+        actionInProgress = false;
+      }, 400);
+    });
+}
+
+/* =========================
+   BUTTON ACTIONS
+========================= */
+function addRun(runs) {
+  callAction(
+    `${API}?action=addRun&matchId=${MATCH_ID}&runs=${runs}`
+  );
 }
 
 function addExtra(type) {
-  fetch(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${type}`)
-    .then(res => res.json())
-    .then(() => loadLiveScore());
+  callAction(
+    `${API}?action=addExtra&matchId=${MATCH_ID}&type=${type}`
+  );
 }
 
 function addWicket() {
-  fetch(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`)
-    .then(res => res.json())
-    .then(() => loadLiveScore());
+  callAction(
+    `${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`
+  );
 }
 
 function undoBall() {
-  fetch(`${API}?action=undoBall&matchId=${MATCH_ID}`)
-    .then(res => res.json())
-    .then(() => loadLiveScore());
+  callAction(
+    `${API}?action=undoBall&matchId=${MATCH_ID}`
+  );
 }
