@@ -29,12 +29,16 @@ function loadLiveScore() {
 
       el("score").innerText = `${d.totalRuns} / ${d.wickets}`;
       el("overs").innerText = `Overs: ${d.over}.${d.ball}`;
-      el("striker").innerText = d.strikerId || "-";
-      el("nonStriker").innerText = d.nonStrikerId || "-";
       el("bowler").innerText = d.bowlerId || "-";
       el("state").innerText = d.state;
 
+      // ✅ STORE IDS (DO NOT SHOW HERE)
+      window.currentStrikerId = d.strikerId;
+      window.currentNonStrikerId = d.nonStrikerId;
+
       handleStateUI(d);
+
+      // ✅ ONLY place where batsman UI is rendered
       loadBatsmanStats();
     })
     .catch(err => console.error("Live score error:", err));
@@ -43,25 +47,27 @@ function loadLiveScore() {
 /* =========================
    LOAD BATSMAN SCORE
 ========================= */
-
 function loadBatsmanStats() {
   fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`)
     .then(r => r.json())
     .then(d => {
       if (d.status !== "ok") return;
 
-      const strikerId = document.getElementById("striker").innerText;
-      const nonStrikerId = document.getElementById("nonStriker").innerText;
+      const strikerId = window.currentStrikerId;
+      const nonStrikerId = window.currentNonStrikerId;
+
+      if (!strikerId || !nonStrikerId) return;
 
       const s = d.stats[strikerId] || { runs: 0, balls: 0, fours: 0, sixes: 0 };
       const ns = d.stats[nonStrikerId] || { runs: 0, balls: 0, fours: 0, sixes: 0 };
 
-      document.getElementById("striker").innerText =
+      el("striker").innerText =
         `* ${strikerId}  ${s.runs} (${s.balls})  ${s.fours}x4 ${s.sixes}x6`;
 
-      document.getElementById("nonStriker").innerText =
+      el("nonStriker").innerText =
         `${nonStrikerId}  ${ns.runs} (${ns.balls})`;
-    });
+    })
+    .catch(err => console.error("Batsman stats error:", err));
 }
 
 /* =========================
