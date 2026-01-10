@@ -6,22 +6,110 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* (CSS SAME AS YOURS – NO CHANGE) */
 body { margin:0; font-family:Arial; background:#f2f4f8; }
-.scoreboard { max-width:380px; margin:30px auto; background:#fff; border-radius:16px; padding:20px; box-shadow:0 6px 16px rgba(0,0,0,0.12);}
-.score { font-size:38px; font-weight:bold; text-align:center;}
-.overs { text-align:center; font-size:18px; margin-top:6px;}
-.divider { height:1px; background:#e0e0e0; margin:16px 0;}
-.row { display:flex; justify-content:space-between; margin:6px 0;}
-.state { margin-top:14px; text-align:center; padding:8px; border-radius:8px; font-weight:bold; background:#e3f2fd;}
-.buttons { margin-top:16px;}
-.row-btn { display:flex; gap:10px; margin-bottom:10px;}
-button { flex:1; padding:14px; font-size:18px; border:none; border-radius:10px; background:#0a7cff; color:#fff;}
-.extra{background:#ff9800;} .wicket{background:#e53935;} .undo{background:#444;}
-.popup{position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;}
-.popup.hidden{display:none;}
-.popup-box{background:#fff; padding:20px; border-radius:14px; width:280px;}
-.popup-box select{width:100%; padding:10px; margin:12px 0;}
+
+.scoreboard {
+  max-width:380px;
+  margin:30px auto;
+  background:#fff;
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 6px 16px rgba(0,0,0,0.12);
+}
+
+.score {
+  font-size:38px;
+  font-weight:bold;
+  text-align:center;
+}
+
+.overs {
+  text-align:center;
+  font-size:18px;
+  margin-top:6px;
+}
+
+.divider {
+  height:1px;
+  background:#e0e0e0;
+  margin:16px 0;
+}
+
+.row {
+  display:flex;
+  justify-content:space-between;
+  margin:6px 0;
+  font-size:16px;
+}
+
+.state {
+  margin-top:14px;
+  text-align:center;
+  padding:8px;
+  border-radius:8px;
+  font-weight:bold;
+  background:#e3f2fd;
+}
+
+.buttons { margin-top:16px; }
+
+.row-btn {
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+button {
+  flex:1;
+  padding:14px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  background:#0a7cff;
+  color:#fff;
+  cursor:pointer;
+}
+
+.extra { background:#ff9800; }
+.wicket { background:#e53935; }
+.undo { background:#444; }
+
+/* POPUP */
+.popup {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+.popup.hidden { display:none; }
+
+.popup-box {
+  background:#fff;
+  padding:20px;
+  border-radius:14px;
+  width:280px;
+}
+
+.popup-box h3 {
+  margin:0 0 10px;
+}
+
+.popup-box select {
+  width:100%;
+  padding:10px;
+  margin:12px 0;
+  font-size:16px;
+}
+
+.popup-box button {
+  width:100%;
+  padding:12px;
+  font-size:16px;
+}
 </style>
 </head>
 
@@ -29,14 +117,29 @@ button { flex:1; padding:14px; font-size:18px; border:none; border-radius:10px; 
 
 <div class="scoreboard">
 
+  <!-- SCORE -->
   <div class="score" id="score">-- / --</div>
   <div class="overs" id="overs">Overs: --.-</div>
+
   <div class="divider"></div>
 
-  <div class="row"><span>Striker</span><span id="striker">-</span></div>
-  <div class="row"><span>Non-Striker</span><span id="nonStriker">-</span></div>
-  <div class="row"><span>Bowler</span><span id="bowler">-</span></div>
+  <!-- PLAYERS -->
+  <div class="row">
+    <span>Striker</span>
+    <span id="striker">-</span>
+  </div>
 
+  <div class="row">
+    <span>Non-Striker</span>
+    <span id="nonStriker">-</span>
+  </div>
+
+  <div class="row">
+    <span>Bowler</span>
+    <span id="bowler">-</span>
+  </div>
+
+  <!-- STATE -->
   <div class="state" id="state">WAITING...</div>
 
   <!-- BUTTONS -->
@@ -46,32 +149,37 @@ button { flex:1; padding:14px; font-size:18px; border:none; border-radius:10px; 
       <button onclick="addRun(1)">1</button>
       <button onclick="addRun(2)">2</button>
     </div>
+
     <div class="row-btn">
       <button onclick="addRun(3)">3</button>
       <button onclick="addRun(4)">4</button>
       <button onclick="addRun(6)">6</button>
     </div>
+
     <div class="row-btn">
       <button class="extra" onclick="addExtra('WD')">WD</button>
       <button class="extra" onclick="addExtra('NB')">NB</button>
       <button class="wicket" onclick="addWicket()">W</button>
     </div>
+
     <div class="row-btn">
       <button class="undo" onclick="undoBall()">UNDO</button>
     </div>
   </div>
 
-  <!-- POPUP -->
-  <div id="popup" class="popup hidden">
-    <div class="popup-box">
-      <h3 id="popupTitle"></h3>
-      <select id="popupSelect"></select>
-      <button onclick="confirmPopup()">CONFIRM</button>
-    </div>
-  </div>
-
 </div>
 
+<!-- POPUP -->
+<div id="popup" class="popup hidden">
+  <div class="popup-box">
+    <h3 id="popupTitle"></h3>
+    <select id="popupSelect"></select>
+    <button onclick="confirmPopup()">CONFIRM</button>
+  </div>
+</div>
+
+<!-- MAIN JS -->
 <script src="index.js"></script>
+
 </body>
 </html>
