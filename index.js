@@ -4,6 +4,8 @@ const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMd
 let actionInProgress = false;
 let popupMode = null;
 let popupActive = false;
+
+// 🔑 event-based guard
 let lastHandledEventKey = null;
 
 /* =========================
@@ -13,16 +15,8 @@ function el(id) {
   return document.getElementById(id);
 }
 
-function postAction(payload) {
-  return fetch(API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  }).then(r => r.json());
-}
-
 /* =========================
-   LOAD LIVE SCORE (GET ONLY)
+   LOAD LIVE SCORE
 ========================= */
 function loadLiveScore() {
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
@@ -35,9 +29,9 @@ function loadLiveScore() {
 
       el("score").innerText = `${d.totalRuns} / ${d.wickets}`;
       el("overs").innerText = `Overs: ${d.over}.${d.ball}`;
-      el("striker").innerText = d.strikerId;
-      el("nonStriker").innerText = d.nonStrikerId;
-      el("bowler").innerText = d.bowlerId;
+      el("striker").innerText = d.strikerId || "-";
+      el("nonStriker").innerText = d.nonStrikerId || "-";
+      el("bowler").innerText = d.bowlerId || "-";
       el("state").innerText = d.state;
 
       handleStateUI(d);
@@ -46,36 +40,39 @@ function loadLiveScore() {
 }
 
 /* =========================
-   STATE CONTROLLER
+   STATE CONTROLLER (FINAL)
 ========================= */
 function handleStateUI(d) {
   if (popupActive) return;
 
+  // 🔑 unique event identity
   const eventKey = `${d.over}-${d.ball}-${d.wickets}-${d.state}`;
+
+  // ⛔ prevent re-handling same event
   if (eventKey === lastHandledEventKey) return;
 
-  // 🟡 WICKET
+  // 🟡 normal wicket
   if (d.state === "WICKET") {
     lastHandledEventKey = eventKey;
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
-  // 🟡 6th BALL WICKET
+  // 🟡 6th-ball wicket (first popup = batsman)
   if (d.state === "WICKET_OVER_END") {
     lastHandledEventKey = eventKey;
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
-  // 🟢 OVER END (after batsman set)
+  // 🟢 over end (after batsman set)
   if (d.state === "OVER_END") {
     lastHandledEventKey = eventKey;
     openPopup("BOWLER", "Select New Bowler");
     return;
   }
 
-  // 🔄 NORMAL
+  // 🔄 normal play resumed
   if (d.state === "NORMAL") {
     lastHandledEventKey = null;
     closePopup();
@@ -113,75 +110,62 @@ function confirmPopup() {
   const v = el("popupSelect").value;
   if (!v) return alert("Please select player");
 
-  // 🟡 BATSMAN
+  // 🟡 batsman replacement
   if (popupMode === "BATSMAN") {
-    postAction({
-      action: "setNewBatsman",
-      matchId: MATCH_ID,
-      newBatsmanId: v
-    }).then(loadLiveScore);
-
+    callAction(
+      `${API}?action=setNewBatsman&matchId=${MATCH_ID}&newBatsmanId=${v}`,
+      true
+    );
     closePopup();
     return;
   }
 
-  // 🟢 BOWLER
+  // 🟢 bowler change
   if (popupMode === "BOWLER") {
-    postAction({
-      action: "changeBowler",
-      matchId: MATCH_ID,
-      newBowlerId: v
-    }).then(loadLiveScore);
-
+    callAction(
+      `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
+      true
+    );
     closePopup();
   }
 }
 
 /* =========================
-   BUTTON ACTIONS (POST ONLY)
+   API CALL HANDLER
+========================= */
+function callAction(url, force = false) {
+  if (actionInProgress && !force) return;
+
+  actionInProgress = true;
+  fetch(url)
+    .then(() => loadLiveScore())
+    .catch(err => console.error("Action error:", err))
+    .finally(() => {
+      setTimeout(() => (actionInProgress = false), 300);
+    });
+}
+
+/* =========================
+   BUTTON ACTIONS
 ========================= */
 function addRun(r) {
-  postAction({
-    action: "addRun",
-    matchId: MATCH_ID,
-    runs: r
-  }).then(loadLiveScore);
+  callAction(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`);
 }
 
 function addExtra(t) {
-  postAction({
-    action: "addExtra",
-    matchId: MATCH_ID,
-    type: t
-  }).then(loadLiveScore);
+  callAction(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${t}`);
 }
 
 function addWicket() {
-  postAction({
-    action: "addWicket",
-    matchId: MATCH_ID,
-    wicketType: "BOWLED"
-  }).then(loadLiveScore);
+  callAction(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`);
 }
 
 function undoBall() {
-  console.log("UNDO CLICKED");
-
-  // 🔴 FULL UI RESET
   popupActive = false;
   popupMode = null;
   lastHandledEventKey = null;
   closePopup();
-
-  postAction({
-    action: "undoBall",
-    matchId: MATCH_ID
-  })
-  .then(res => {
-    console.log("Undo response:", res);
-    setTimeout(loadLiveScore, 200);
-  })
-  .catch(err => console.error("Undo error:", err));
+  callAction(`${API}?action=undoBall&matchId=${MATCH_ID}`, true);
 }
 
 /* =========================
