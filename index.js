@@ -35,8 +35,33 @@ function loadLiveScore() {
       el("state").innerText = d.state;
 
       handleStateUI(d);
+      loadBatsmanStats();
     })
     .catch(err => console.error("Live score error:", err));
+}
+
+/* =========================
+   LOAD BATSMAN SCORE
+========================= */
+
+function loadBatsmanStats() {
+  fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status !== "ok") return;
+
+      const strikerId = document.getElementById("striker").innerText;
+      const nonStrikerId = document.getElementById("nonStriker").innerText;
+
+      const s = d.stats[strikerId] || { runs: 0, balls: 0, fours: 0, sixes: 0 };
+      const ns = d.stats[nonStrikerId] || { runs: 0, balls: 0, fours: 0, sixes: 0 };
+
+      document.getElementById("striker").innerText =
+        `* ${strikerId}  ${s.runs} (${s.balls})  ${s.fours}x4 ${s.sixes}x6`;
+
+      document.getElementById("nonStriker").innerText =
+        `${nonStrikerId}  ${ns.runs} (${ns.balls})`;
+    });
 }
 
 /* =========================
