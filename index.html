@@ -6,175 +6,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body { margin:0; font-family:Arial; background:#f2f4f8; }
+body{margin:0;font-family:Arial;background:#f2f4f8}
+.scoreboard{max-width:380px;margin:30px auto;background:#fff;border-radius:16px;padding:20px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
 
-.scoreboard {
-  max-width:380px;
-  margin:30px auto;
-  background:#fff;
-  border-radius:16px;
-  padding:20px;
-  box-shadow:0 6px 16px rgba(0,0,0,0.12);
-}
+.team-name{font-size:18px;font-weight:bold}
+.team-score{font-size:34px;font-weight:bold;margin-top:4px}
 
-/* HEADER */
-.team-name { font-size:18px; font-weight:bold; }
-.team-score { font-size:34px; font-weight:bold; margin-top:4px; }
+.meta-row{display:flex;gap:20px;font-size:14px;color:#555;margin:8px 0 14px}
 
-.meta-row {
-  display:flex;
-  gap:20px;
-  font-size:14px;
-  color:#555;
-  margin:8px 0 14px;
-}
+.table{margin-top:12px}
+.table-head,.table-row{display:grid;grid-template-columns:2fr repeat(5,1fr);font-size:14px;padding:6px 0}
+.table-head{color:#777;border-bottom:1px solid #ddd}
+.table-row{align-items:center}
+.name{font-weight:bold}
+.star{color:#0a7cff}
 
-/* TABLE */
-.table { margin-top:12px; }
+.divider{height:1px;background:#e0e0e0;margin:16px 0}
 
-.table-head,
-.table-row {
-  display:grid;
-  grid-template-columns: 2fr repeat(5, 1fr);
-  font-size:14px;
-  padding:6px 0;
-}
+.row{display:flex;justify-content:space-between;margin:6px 0;font-size:16px}
 
-.table-head {
-  color:#777;
-  border-bottom:1px solid #ddd;
-}
+.state{text-align:center;padding:8px;border-radius:8px;font-weight:bold;background:#e3f2fd;margin-top:14px}
 
-.table-row {
-  align-items:center;
-}
+.buttons{margin-top:16px}
+.row-btn{display:flex;gap:10px;margin-bottom:10px}
 
-.name { font-weight:bold; }
-.star { color:#0a7cff; }
+button{flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;background:#0a7cff;color:#fff;cursor:pointer}
+.extra{background:#ff9800}
+.wicket{background:#e53935}
+.undo{background:#444}
 
-/* OLD SCORE */
-.score {
-  font-size:38px;
-  font-weight:bold;
-  text-align:center;
-}
-
-.overs {
-  text-align:center;
-  font-size:18px;
-  margin-top:6px;
-}
-
-.divider {
-  height:1px;
-  background:#e0e0e0;
-  margin:16px 0;
-}
-
-.row {
-  display:flex;
-  justify-content:space-between;
-  margin:6px 0;
-  font-size:16px;
-}
-
-.state {
-  margin-top:14px;
-  text-align:center;
-  padding:8px;
-  border-radius:8px;
-  font-weight:bold;
-  background:#e3f2fd;
-}
-
-/* BUTTONS */
-.buttons { margin-top:16px; }
-
-.row-btn {
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-button {
-  flex:1;
-  padding:14px;
-  font-size:18px;
-  border:none;
-  border-radius:10px;
-  background:#0a7cff;
-  color:#fff;
-  cursor:pointer;
-}
-
-.extra { background:#ff9800; }
-.wicket { background:#e53935; }
-.undo { background:#444; }
-
-/* POPUP */
-.popup {
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
-}
-
-.popup.hidden { display:none; }
-
-.popup-box {
-  background:#fff;
-  padding:20px;
-  border-radius:14px;
-  width:280px;
-}
-
-.popup-box h3 { margin:0 0 10px; }
-
-.popup-box select {
-  width:100%;
-  padding:10px;
-  margin:12px 0;
-  font-size:16px;
-}
-
-.popup-box button {
-  width:100%;
-  padding:12px;
-  font-size:16px;
-}
-
-  /*TEAM SCORE*/
-
-  .team-head { margin-top: 10px; }
-.team-name { font-size: 18px; font-weight: bold; }
-.team-score { font-size: 32px; font-weight: bold; }
-
-.meta-row {
-  display: flex;
-  gap: 20px;
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 10px;
-}
-
-.table-head, .table-row {
-  display: grid;
-  grid-template-columns: 2fr repeat(5, 1fr);
-  padding: 6px 0;
-  font-size: 14px;
-}
-
-.table-head {
-  border-bottom: 1px solid #ddd;
-  color: #777;
-}
-
-.table-row .name { font-weight: bold; }
-.star { color: #0a7cff; }
-  
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000}
+.popup.hidden{display:none}
+.popup-box{background:#fff;padding:20px;border-radius:14px;width:280px}
+.popup-box select{width:100%;padding:10px;margin:12px 0;font-size:16px}
 </style>
 </head>
 
@@ -183,7 +47,7 @@ button {
 <div class="scoreboard">
 
   <!-- TEAM HEADER -->
-  <div class="team-name" id="teamName">TEAM A</div>
+  <div class="team-name" id="teamName">SYS</div>
   <div class="team-score" id="teamScore">0-0 (0)</div>
 
   <div class="meta-row">
@@ -191,32 +55,7 @@ button {
     <span id="pship">P'SHIP 0(0)</span>
   </div>
 
-  <!-- TEAM + LIVE TABLE -->
-<div class="team-head">
-  <div class="team-name" id="teamName">SYS</div>
-  <div class="team-score" id="teamScore">0-0 (0)</div>
-</div>
-
-<div class="meta-row">
-  <span id="crr">CRR 0.00</span>
-  <span id="pship">P'SHIP 0(0)</span>
-</div>
-
-<div class="table">
-  <div class="table-head">
-    <span>Batter</span><span>R</span><span>B</span><span>4s</span><span>6s</span><span>SR</span>
-  </div>
-  <div id="batsmanRows"></div>
-</div>
-
-<div class="table">
-  <div class="table-head">
-    <span>Bowler</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span>
-  </div>
-  <div id="bowlerRows"></div>
-</div>
-
-  <!-- BATSMEN -->
+  <!-- BATSMEN TABLE -->
   <div class="table">
     <div class="table-head">
       <span>Batter</span><span>R</span><span>B</span><span>4s</span><span>6s</span><span>SR</span>
@@ -224,7 +63,7 @@ button {
     <div id="batsmanRows"></div>
   </div>
 
-  <!-- BOWLER -->
+  <!-- BOWLER TABLE -->
   <div class="table">
     <div class="table-head">
       <span>Bowler</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span>
@@ -234,21 +73,10 @@ button {
 
   <div class="divider"></div>
 
-  <!-- OLD SIMPLE VIEW (KEEP) -->
-  <div class="row">
-    <span>Striker</span>
-    <span id="striker">-</span>
-  </div>
-
-  <div class="row">
-    <span>Non-Striker</span>
-    <span id="nonStriker">-</span>
-  </div>
-
-  <div class="row">
-    <span>Bowler</span>
-    <span id="bowler">-</span>
-  </div>
+  <!-- SIMPLE LIVE VIEW -->
+  <div class="row"><span>Striker</span><span id="striker">-</span></div>
+  <div class="row"><span>Non-Striker</span><span id="nonStriker">-</span></div>
+  <div class="row"><span>Bowler</span><span id="bowler">-</span></div>
 
   <div class="state" id="state">WAITING...</div>
 
@@ -276,7 +104,6 @@ button {
       <button class="undo" onclick="undoBall()">UNDO</button>
     </div>
   </div>
-
 </div>
 
 <!-- POPUP -->
