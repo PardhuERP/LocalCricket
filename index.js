@@ -54,9 +54,9 @@ function renderBatsmen(stats, strikerId, nonStrikerId) {
   box.innerHTML = "";
 
   [strikerId, nonStrikerId].forEach(pid => {
-    if (!stats[pid]) return;
+    if (!pid) return;
 
-    const s = stats[pid];
+    const s = stats[pid] || { runs: 0, balls: 0, fours: 0, sixes: 0 };
     const sr = s.balls ? ((s.runs / s.balls) * 100).toFixed(2) : "0.00";
     const isStriker = pid === strikerId;
 
