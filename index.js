@@ -31,19 +31,15 @@ function loadLiveScore() {
     .then(r => r.json())
     .then(d => {
       if (d.status !== "ok") return;
-
-      el("score").innerText = `${d.totalRuns} / ${d.wickets}`;
-      el("overs").innerText = `Overs: ${d.over}.${d.ball}`;
-      el("bowler").innerText = d.bowlerId;
-      el("state").innerText = d.state;
-
-      window.currentStrikerId = d.strikerId;
-      window.currentNonStrikerId = d.nonStrikerId;
-
-      loadBatsmanStats();
-      handleStateUI(d);
-    });
-}
+// fetch batsman stats
+fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`)
+  .then(r => r.json())
+  .then(s => {
+    if (s.status === "ok") {
+      renderBatsmen(s.stats, d.strikerId, d.nonStrikerId);
+      renderBowler(d.bowlerId);
+    }
+  });
 
 /* =========================
    BATSMAN STATS
@@ -67,6 +63,40 @@ function loadBatsmanStats() {
     });
 }
 
+
+function renderBatsmen(stats, strikerId, nonStrikerId) {
+  const box = document.getElementById("batsmanRows");
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  [strikerId, nonStrikerId].forEach((pid, i) => {
+    if (!stats[pid]) return;
+
+    const s = stats[pid];
+    const sr = s.balls ? ((s.runs / s.balls) * 100).toFixed(2) : "0.00";
+
+    box.innerHTML += `
+      <div class="table-row">
+        <span class="name">${i === 0 ? '<span class="star">*</span>' : ''} ${pid}</span>
+        <span>${s.runs}</span>
+        <span>${s.balls}</span>
+        <span>${s.fours}</span>
+        <span>${s.sixes}</span>
+        <span>${sr}</span>
+      </div>
+    `;
+  });
+}
+
+function renderBowler(bowlerId) {
+  document.getElementById("bowlerRows").innerHTML = `
+    <div class="table-row">
+      <span class="name"><span class="star">*</span> ${bowlerId}</span>
+      <span>-</span><span>-</span><span>-</span><span>-</span><span>-</span>
+    </div>
+  `;
+}
 /* =========================
    STATE CONTROLLER (FINAL)
 ========================= */
@@ -93,7 +123,9 @@ function handleStateUI(d) {
       return;
     }
 
-    if (wicketOverStep === "BATSMAN_DONE") {
+    if (wicketOverStep === "BATSMAN_DONE")
+    
+    {
       wicketOverStep = null;
       lastHandledBallKey = ballKey;
       openPopup("BOWLER", "Select New Bowler");
