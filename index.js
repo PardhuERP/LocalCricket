@@ -1,6 +1,7 @@
 const MATCH_ID = "MATCH_1767874129183";
 const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+let lastBowlerPopupOver = null;
 /* =========================
    GLOBAL STATE
 ========================= */
@@ -110,12 +111,8 @@ function renderBowler(bowlerId, s = {}) {
 function handleStateUI(d) {
   if (popupActive) return;
 
-  const eventKey = `${d.state}_${d.over}_${d.ball}_${d.wickets}`;
-  if (eventKey === lastHandledEventKey) return;
-
-  // ✅ NORMAL RESET
+  // 🔄 RESET
   if (d.state === "NORMAL") {
-    lastHandledEventKey = null;
     wicketOverStep = null;
     closePopup();
     return;
@@ -123,32 +120,38 @@ function handleStateUI(d) {
 
   // 🟡 NORMAL WICKET
   if (d.state === "WICKET") {
-    lastHandledEventKey = eventKey;
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
-  // 🟡 6th BALL WICKET (STRICT 2 STEP)
+  // 🟡 6th BALL WICKET (STRICT ORDER)
   if (d.state === "WICKET_OVER_END") {
 
+    // STEP 1 → BATSMAN
     if (!wicketOverStep) {
       wicketOverStep = "BATSMAN_DONE_PENDING";
-      lastHandledEventKey = eventKey;
       openPopup("BATSMAN", "Select New Batsman");
       return;
     }
 
-    if (wicketOverStep === "BATSMAN_DONE") {
+    // STEP 2 → BOWLER (ONLY ONCE PER OVER)
+    if (
+      wicketOverStep === "BATSMAN_DONE" &&
+      lastBowlerPopupOver !== d.over
+    ) {
+      lastBowlerPopupOver = d.over;
       wicketOverStep = null;
-      lastHandledEventKey = eventKey;
       openPopup("BOWLER", "Select New Bowler");
       return;
     }
   }
 
-  // 🟢 NORMAL OVER END
-  if (d.state === "OVER_END") {
-    lastHandledEventKey = eventKey;
+  // 🟢 NORMAL OVER END (NO WICKET)
+  if (
+    d.state === "OVER_END" &&
+    lastBowlerPopupOver !== d.over
+  ) {
+    lastBowlerPopupOver = d.over;
     openPopup("BOWLER", "Select New Bowler");
   }
 }
@@ -188,12 +191,17 @@ function confirmPopup() {
   }
 
   if (popupMode === "BOWLER") {
-    callAction(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`, true);
-    wicketOverStep = null;
-    lastHandledEventKey = null;
-    closePopup();
+  callAction(
+    `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
+    true
+  );
+
+  wicketOverStep = null;
+  lastHandledEventKey = null;
+  lastBowlerPopupOver = null;   // ✅ CORRECT VARIABLE NAME
+
+  closePopup();
   }
-}
 
 /* =========================
    API
