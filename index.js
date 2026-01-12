@@ -1,7 +1,6 @@
 const MATCH_ID = "MATCH_1767874129183";
 const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
-let lastBowlerPopupOver = null;
 /* =========================
    GLOBAL STATE
 ========================= */
@@ -9,8 +8,9 @@ let actionInProgress = false;
 let popupActive = false;
 let popupMode = null;
 
-let lastHandledEventKey = null;   // ✅ UNIQUE EVENT LOCK
-let wicketOverStep = null;        // null | "BATSMAN_DONE"
+let lastHandledEventKey = null;      // 🔐 MASTER EVENT LOCK
+let lastBowlerPopupOver = null;      // 🔐 BOWLER LOCK
+let wicketOverStep = null;           // null | BATSMAN_DONE
 
 /* =========================
    DOM HELPER
@@ -57,11 +57,10 @@ function renderBatsmen(stats, strikerId, nonStrikerId) {
 
     const s = stats[pid] || { runs: 0, balls: 0, fours: 0, sixes: 0 };
     const sr = s.balls ? ((s.runs / s.balls) * 100).toFixed(2) : "0.00";
-    const isStriker = pid === strikerId;
 
     box.innerHTML += `
       <div class="table-row">
-        <span class="name">${isStriker ? '<span class="star">*</span>' : ''} ${pid}</span>
+        <span class="name">${pid === strikerId ? '<span class="star">*</span>' : ''} ${pid}</span>
         <span>${s.runs}</span>
         <span>${s.balls}</span>
         <span>${s.fours}</span>
@@ -80,15 +79,13 @@ function loadBowlerStats(bowlerId) {
     .then(r => r.json())
     .then(d => {
       if (d.status !== "ok") return;
-
-      const s = d.stats?.[bowlerId] || {};
-      renderBowler(bowlerId, s);
+      renderBowler(bowlerId, d.stats?.[bowlerId] || {});
     });
 }
 
 function renderBowler(bowlerId, s = {}) {
   const overs = s.overs || 0;
-  const maidens = s.maidens || 0;     // ✅ FIXED
+  const maidens = s.maidens || 0;
   const runs = s.runsGiven || 0;
   const wickets = s.wickets || 0;
   const eco = overs ? (runs / overs).toFixed(2) : "0.00";
@@ -106,52 +103,58 @@ function renderBowler(bowlerId, s = {}) {
 }
 
 /* =========================
-   STATE CONTROLLER (FINAL)
+   STATE CONTROLLER (FINAL & SAFE)
 ========================= */
 function handleStateUI(d) {
   if (popupActive) return;
 
+  const eventKey = `${d.over}.${d.ball}_${d.state}`;
+  if (eventKey === lastHandledEventKey) return;
+
   // 🔄 RESET
   if (d.state === "NORMAL") {
     wicketOverStep = null;
+    lastHandledEventKey = null;
     closePopup();
     return;
   }
 
   // 🟡 NORMAL WICKET
   if (d.state === "WICKET") {
+    lastHandledEventKey = eventKey;
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
-  // 🟡 6th BALL WICKET (STRICT ORDER)
+  // 🟡 6th BALL WICKET (BATSMAN → BOWLER)
   if (d.state === "WICKET_OVER_END") {
 
-    // STEP 1 → BATSMAN
     if (!wicketOverStep) {
       wicketOverStep = "BATSMAN_DONE_PENDING";
+      lastHandledEventKey = eventKey;
       openPopup("BATSMAN", "Select New Batsman");
       return;
     }
 
-    // STEP 2 → BOWLER (ONLY ONCE PER OVER)
     if (
       wicketOverStep === "BATSMAN_DONE" &&
       lastBowlerPopupOver !== d.over
     ) {
       lastBowlerPopupOver = d.over;
       wicketOverStep = null;
+      lastHandledEventKey = eventKey;
       openPopup("BOWLER", "Select New Bowler");
       return;
     }
   }
 
-  // 🟢 NORMAL OVER END (NO WICKET)
+  // 🟢 NORMAL OVER END
   if (
     d.state === "OVER_END" &&
     lastBowlerPopupOver !== d.over
   ) {
     lastBowlerPopupOver = d.over;
+    lastHandledEventKey = eventKey;
     openPopup("BOWLER", "Select New Bowler");
   }
 }
@@ -191,17 +194,15 @@ function confirmPopup() {
   }
 
   if (popupMode === "BOWLER") {
-  callAction(
-    `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
-    true
-  );
+    callAction(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`, true);
 
-  wicketOverStep = null;
-  lastHandledEventKey = null;
-  lastBowlerPopupOver = null;   // ✅ CORRECT VARIABLE NAME
+    wicketOverStep = null;
+    lastHandledEventKey = null;
+    lastBowlerPopupOver = null;
 
-  closePopup();
+    closePopup();
   }
+}
 
 /* =========================
    API
