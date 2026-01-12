@@ -1,6 +1,7 @@
 const MATCH_ID = "MATCH_1767874129183";
 const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+let bowlerChangeInProgress = false;   // ✅ ADD
 /* =========================
    GLOBAL STATE
 ========================= */
