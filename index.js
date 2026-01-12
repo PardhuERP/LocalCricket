@@ -87,6 +87,7 @@ function loadBowlerStats(bowlerId) {
 
 function renderBowler(bowlerId, s = {}) {
   const overs = s.overs || 0;
+  const maidens = s.maidens || 0;          // ✅ ADD
   const runs = s.runsGiven || 0;
   const wickets = s.wickets || 0;
   const eco = overs ? (runs / overs).toFixed(2) : "0.00";
@@ -95,7 +96,7 @@ function renderBowler(bowlerId, s = {}) {
     <div class="table-row">
       <span class="name"><span class="star">*</span> ${bowlerId}</span>
       <span>${overs}</span>
-      <span>0</span>
+      <span>${maidens}</span>               <!-- ✅ FIX -->
       <span>${runs}</span>
       <span>${wickets}</span>
       <span>${eco}</span>
