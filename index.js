@@ -24,10 +24,15 @@ function loadLiveScore() {
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
     .then(r => r.json())
     .then(d => {
-      if (d.status !== "ok") return;
+      if (!d || d.status !== "ok") {
+  el("state").innerText = "WAITING...";
+  return;
+}
 
-      el("teamScore").innerText = `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
-      el("state").innerText = d.state;
+el("teamScore").innerText = `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
+
+// ✅ ALWAYS TRUST BACKEND STATE
+el("state").innerText = d.state || "NORMAL";
 
       loadBatsmanStats(d.strikerId, d.nonStrikerId);
       loadBowlerStats(d.bowlerId);
@@ -106,6 +111,7 @@ function renderBowler(bowlerId, s = {}) {
    STATE CONTROLLER (FINAL & SAFE)
 ========================= */
 function handleStateUI(d) {
+  if (!d || !d.state) return;
   if (popupActive) return;
 
   const eventKey = `${d.over}.${d.ball}_${d.state}`;
@@ -113,11 +119,11 @@ function handleStateUI(d) {
 
   // 🔄 RESET
   if (d.state === "NORMAL") {
-    wicketOverStep = null;
-    lastHandledEventKey = null;
-    closePopup();
-    return;
-  }
+  lastHandledEvent = null;
+  wicketOverStep = null;
+  closePopup();
+  return; // ❗ DO NOT TOUCH state text here
+}
 
   // 🟡 NORMAL WICKET
   if (d.state === "WICKET") {
