@@ -214,14 +214,16 @@ function confirmPopup() {
 
   // 🟢 BOWLER
   if (popupMode === "BOWLER") {
-    callAction(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`, true);
 
-    // 🔒 HARD RESET TO PREVENT DOUBLE POPUP
-    wicketOverStep = null;
-    lastHandledEvent = null;
+  bowlerChangeInProgress = true;   // 🔒 LOCK UI
 
-    closePopup();
-  }
+  callAction(
+    `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
+    true
+  );
+
+  wicketOverStep = null;
+  closePopup();
 }
 
 /* =========================
