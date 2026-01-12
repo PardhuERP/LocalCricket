@@ -8,9 +8,9 @@ let actionInProgress = false;
 let popupActive = false;
 let popupMode = null;
 
-let lastHandledEvent = null;     // WICKET_x | OVER_END_x
-let wicketOverStep = null;       // null | BATSMAN_DONE
-let scoreboardFrozen = false;
+let lastHandledEvent = null;      // event key
+let wicketOverStep = null;        // null | BATSMAN_DONE
+let playLocked = false;           // 🔒 SCORE FREEZE LOCK
 
 /* =========================
    DOM HELPER
@@ -18,21 +18,11 @@ let scoreboardFrozen = false;
 const el = id => document.getElementById(id);
 
 /* =========================
-   FREEZE / UNFREEZE UI
-========================= */
-function setScoreboardFrozen(freeze) {
-  const board = document.querySelector(".scoreboard");
-  if (!board) return;
-
-  board.style.pointerEvents = freeze ? "none" : "auto";
-  board.style.opacity = freeze ? "0.6" : "1";
-  scoreboardFrozen = freeze;
-}
-
-/* =========================
    LOAD LIVE SCORE
 ========================= */
 function loadLiveScore() {
+  if (actionInProgress) return;
+
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
     .then(r => r.json())
     .then(d => {
@@ -45,17 +35,12 @@ function loadLiveScore() {
         `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
       el("state").innerText = d.state;
 
-      // 🔒 FREEZE BASED ON STATE
-      setScoreboardFrozen(d.state !== "NORMAL");
-
       loadBatsmanStats(d.strikerId, d.nonStrikerId);
       loadBowlerStats(d.bowlerId);
 
       handleStateUI(d);
     })
-    .catch(() => {
-      el("state").innerText = "OFFLINE";
-    });
+    .catch(() => el("state").innerText = "OFFLINE");
 }
 
 /* =========================
@@ -65,8 +50,9 @@ function loadBatsmanStats(strikerId, nonStrikerId) {
   fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`)
     .then(r => r.json())
     .then(d => {
-      if (d.status === "ok")
+      if (d.status === "ok") {
         renderBatsmen(d.stats, strikerId, nonStrikerId);
+      }
     });
 }
 
@@ -78,7 +64,7 @@ function renderBatsmen(stats, strikerId, nonStrikerId) {
     if (!pid) return;
 
     const s = stats[pid] || { runs:0, balls:0, fours:0, sixes:0 };
-    const sr = s.balls ? ((s.runs / s.balls) * 100).toFixed(2) : "0.00";
+    const sr = s.balls ? ((s.runs/s.balls)*100).toFixed(2) : "0.00";
     const star = pid === strikerId ? '<span class="star">*</span>' : '';
 
     box.innerHTML += `
@@ -89,8 +75,7 @@ function renderBatsmen(stats, strikerId, nonStrikerId) {
         <span>${s.fours}</span>
         <span>${s.sixes}</span>
         <span>${sr}</span>
-      </div>
-    `;
+      </div>`;
   });
 }
 
@@ -117,44 +102,51 @@ function renderBowler(bowlerId, s) {
   el("bowlerRows").innerHTML = `
     <div class="table-row">
       <span class="name"><span class="star">*</span> ${bowlerId}</span>
-      <span>${s.overs}</span>
-      <span>${s.maidens}</span>
-      <span>${s.runsGiven}</span>
-      <span>${s.wickets}</span>
+      <span>${s.overs || 0}</span>
+      <span>${s.maidens || 0}</span>
+      <span>${s.runsGiven || 0}</span>
+      <span>${s.wickets || 0}</span>
       <span>${eco}</span>
-    </div>
-  `;
+    </div>`;
 }
 
 /* =========================
-   STATE CONTROLLER
+   STATE CONTROLLER (FINAL)
 ========================= */
 function handleStateUI(d) {
-  if (popupActive) return;
 
-  // ✅ RESET
+  // 🔒 LOCK PLAY WHEN NOT NORMAL
+  if (d.state !== "NORMAL") playLocked = true;
+
+  // 🔓 UNLOCK ONLY WHEN NORMAL
   if (d.state === "NORMAL") {
+    playLocked = false;
     lastHandledEvent = null;
     wicketOverStep = null;
     closePopup();
     return;
   }
 
-  // 🟡 WICKET
-  if (d.state === "WICKET" &&
-      lastHandledEvent !== `WICKET_${d.wickets}`) {
-    lastHandledEvent = `WICKET_${d.wickets}`;
+  if (popupActive) return;
+
+  // 🟡 NORMAL WICKET
+  if (d.state === "WICKET") {
+    const key = `WICKET_${d.wickets}`;
+    if (lastHandledEvent === key) return;
+    lastHandledEvent = key;
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
   // 🟡 6th BALL WICKET
   if (d.state === "WICKET_OVER_END") {
+
     if (!wicketOverStep) {
-      wicketOverStep = "BATSMAN_DONE_PENDING";
+      wicketOverStep = "BATSMAN_PENDING";
       openPopup("BATSMAN", "Select New Batsman");
       return;
     }
+
     if (wicketOverStep === "BATSMAN_DONE") {
       wicketOverStep = null;
       lastHandledEvent = `OVER_END_${d.over}`;
@@ -163,10 +155,11 @@ function handleStateUI(d) {
     }
   }
 
-  // 🟢 OVER END (NO WICKET)
-  if (d.state === "OVER_END" &&
-      lastHandledEvent !== `OVER_END_${d.over}`) {
-    lastHandledEvent = `OVER_END_${d.over}`;
+  // 🟢 NORMAL OVER END
+  if (d.state === "OVER_END") {
+    const key = `OVER_END_${d.over}`;
+    if (lastHandledEvent === key) return;
+    lastHandledEvent = key;
     openPopup("BOWLER", "Select New Bowler");
   }
 }
@@ -198,43 +191,48 @@ function confirmPopup() {
   const v = el("popupSelect").value;
   if (!v) return alert("Select player");
 
-  if (popupMode === "BATSMAN") {
-    if (el("state").innerText === "WICKET_OVER_END")
-      wicketOverStep = "BATSMAN_DONE";
+  const state = el("state").innerText;
+  const over = el("teamScore").innerText.split("(")[1].split(".")[0];
 
+  if (popupMode === "BATSMAN") {
+    if (state === "WICKET_OVER_END") wicketOverStep = "BATSMAN_DONE";
     callAction(`${API}?action=setNewBatsman&matchId=${MATCH_ID}&newBatsmanId=${v}`, true);
-    closePopup();
-    return;
   }
 
   if (popupMode === "BOWLER") {
-    lastHandledEvent = null;
+    lastHandledEvent = `OVER_END_${over}`;
     wicketOverStep = null;
     callAction(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`, true);
-    closePopup();
   }
+
+  closePopup();
 }
 
 /* =========================
-   API HELPER
+   API CALL
 ========================= */
 function callAction(url, force=false) {
   if (actionInProgress && !force) return;
 
   actionInProgress = true;
+  el("state").innerText = "UPDATING...";
+
   fetch(url)
     .then(() => setTimeout(loadLiveScore, 600))
-    .finally(() => setTimeout(() => actionInProgress=false, 1000));
+    .finally(() => {
+      setTimeout(() => actionInProgress = false, 1200);
+    });
 }
 
 /* =========================
-   BUTTONS
+   BUTTON ACTIONS (LOCKED)
 ========================= */
-function addRun(r)   { if (!scoreboardFrozen) callAction(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`); }
-function addExtra(t) { if (!scoreboardFrozen) callAction(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${t}`); }
-function addWicket() { if (!scoreboardFrozen) callAction(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`); }
+function addRun(r)   { if (!playLocked) callAction(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`); }
+function addExtra(t) { if (!playLocked) callAction(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${t}`); }
+function addWicket() { if (!playLocked) callAction(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`); }
 
 function undoBall() {
+  playLocked = false;
   lastHandledEvent = null;
   wicketOverStep = null;
   closePopup();
