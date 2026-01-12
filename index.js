@@ -1,6 +1,7 @@
 const MATCH_ID = "MATCH_1767874129183";
 const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+let uiFreeze = false;   // 🔒 HARD FREEZE
 let bowlerChangeInProgress = false;   // ✅ ADD
 /* =========================
    GLOBAL STATE
@@ -125,6 +126,19 @@ function renderBowler(bowlerId, s) {
 function handleStateUI(d) {
   if (popupActive) return;
   if (!d || !d.state) return;
+
+   function handleStateUI(d) {
+
+  // 🔒 BLOCK ALL POPUPS WHILE FREEZE IS ACTIVE
+  if (uiFreeze) {
+    if (d.state === "NORMAL") {
+      uiFreeze = false;     // 🔓 RELEASE ONLY ON NORMAL
+    } else {
+      return;               // ❌ IGNORE OVER_END / WICKET_OVER_END
+    }
+  }
+
+  if (popupActive) return;
 
   /* 🔴 RESET WHEN PLAY RESUMES */
   if (d.state === "NORMAL") {
