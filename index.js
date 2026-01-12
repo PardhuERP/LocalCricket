@@ -204,12 +204,24 @@ function openPopup(mode, title) {
   popupActive = true;
 
   el("popupTitle").innerText = title;
-  el("popupSelect").innerHTML = `
-    <option value="">-- Select --</option>
-    <option value="PLAYER_1">PLAYER_1</option>
-    <option value="PLAYER_2">PLAYER_2</option>
-    <option value="PLAYER_3">PLAYER_3</option>
-  `;
+
+  // ✅ RUN OUT popup (Striker / Non-Striker)
+  if (mode === "RUNOUT") {
+    el("popupSelect").innerHTML = `
+      <option value="">-- Select --</option>
+      <option value="STRIKER">Striker</option>
+      <option value="NON_STRIKER">Non-Striker</option>
+    `;
+  } 
+  // ✅ EXISTING popup (Batsman / Bowler)
+  else {
+    el("popupSelect").innerHTML = `
+      <option value="">-- Select --</option>
+      <option value="PLAYER_1">PLAYER_1</option>
+      <option value="PLAYER_2">PLAYER_2</option>
+      <option value="PLAYER_3">PLAYER_3</option>
+    `;
+  }
 
   el("popup").classList.remove("hidden");
 }
@@ -230,8 +242,27 @@ function confirmPopup() {
   const currentOver =
     el("teamScore").innerText.split("(")[1].split(".")[0];
 
+  /* =========================
+     🟣 RUN OUT CONFIRM
+  ========================= */
+  if (popupMode === "RUNOUT") {
+    lastHandledEvent = `WICKET_${currentWickets}`;
+
+    callAction(
+      `${API}?action=addRunOut&matchId=${MATCH_ID}&out=${v}`,
+      true
+    );
+
+    closePopup();
+    return;
+  }
+
+  /* =========================
+     🟡 BATSMAN CONFIRM
+  ========================= */
   if (popupMode === "BATSMAN") {
     lastHandledEvent = `WICKET_${currentWickets}`;
+
     if (currentState === "WICKET_OVER_END") {
       wicketOverStep = "BATSMAN_DONE";
     }
@@ -240,7 +271,15 @@ function confirmPopup() {
       `${API}?action=setNewBatsman&matchId=${MATCH_ID}&newBatsmanId=${v}`,
       true
     );
-  } else if (popupMode === "BOWLER") {
+
+    closePopup();
+    return;
+  }
+
+  /* =========================
+     🟢 BOWLER CONFIRM
+  ========================= */
+  if (popupMode === "BOWLER") {
     lastHandledEvent = `OVER_END_${currentOver}`;
     wicketOverStep = null;
 
@@ -248,9 +287,9 @@ function confirmPopup() {
       `${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`,
       true
     );
-  }
 
-  closePopup();
+    closePopup();
+  }
 }
 
 /* =========================
@@ -266,7 +305,12 @@ function addWicket() {
   callAction(
     `${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`
   );
+
+  function addRunOut() {
+  openPopup("RUNOUT", "Run Out – Who is Out?");
 }
+}
+
 
 function undoBall() {
   lastHandledEvent = null;
