@@ -144,11 +144,14 @@ function handleStateUI(d) {
     }
   }
 
-  // 🟢 NORMAL OVER END (NO WICKET)
-  if (d.state === "OVER_END" && lastHandledEvent !== "OVER_END") {
-    lastHandledEvent = "OVER_END";
-    openPopup("BOWLER", "Select New Bowler");
-  }
+  // 🟢 NORMAL OVER END (ONLY ONCE)
+if (
+  d.state === "OVER_END" &&
+  lastHandledEvent !== `OVER_END_${d.over}`
+) {
+  lastHandledEvent = `OVER_END_${d.over}`;   // ✅ KEY FIX
+  openPopup("BOWLER", "Select New Bowler");
+  return;
 }
 
 /* =========================
