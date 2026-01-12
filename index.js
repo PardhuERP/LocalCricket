@@ -25,13 +25,13 @@ function loadLiveScore() {
     .then(d => {
       if (d.status !== "ok") return;
 
-      // Header
+      // HEADER
       el("teamScore").innerText = `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
       el("state").innerText = d.state;
 
-      // Tables
+      // TABLES
       loadBatsmanStats(d.strikerId, d.nonStrikerId);
-      renderBowler(d.bowlerId);
+      loadBowlerStats(d.bowlerId);
 
       handleStateUI(d);
     });
@@ -76,11 +76,31 @@ function renderBatsmen(stats, strikerId, nonStrikerId) {
 /* =========================
    BOWLER
 ========================= */
-function renderBowler(bowlerId) {
+function loadBowlerStats(bowlerId) {
+  fetch(`${API}?action=getPlayerMatchStats&matchId=${MATCH_ID}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status !== "ok") return;
+
+      const s = d.stats[bowlerId];
+      renderBowler(bowlerId, s);
+    });
+}
+
+function renderBowler(bowlerId, s = {}) {
+  const overs = s.overs || 0;
+  const runs = s.runsGiven || 0;
+  const wickets = s.wickets || 0;
+  const eco = overs ? (runs / overs).toFixed(2) : "0.00";
+
   el("bowlerRows").innerHTML = `
     <div class="table-row">
       <span class="name"><span class="star">*</span> ${bowlerId}</span>
-      <span>-</span><span>-</span><span>-</span><span>-</span><span>-</span>
+      <span>${overs}</span>
+      <span>0</span>
+      <span>${runs}</span>
+      <span>${wickets}</span>
+      <span>${eco}</span>
     </div>
   `;
 }
@@ -91,7 +111,6 @@ function renderBowler(bowlerId) {
 function handleStateUI(d) {
   if (popupActive) return;
 
-  // 🔴 NORMAL RESET
   if (d.state === "NORMAL") {
     lastHandledEvent = null;
     wicketOverStep = null;
@@ -99,14 +118,12 @@ function handleStateUI(d) {
     return;
   }
 
-  // 🟡 WICKET (any ball)
   if (d.state === "WICKET" && lastHandledEvent !== "WICKET") {
     lastHandledEvent = "WICKET";
     openPopup("BATSMAN", "Select New Batsman");
     return;
   }
 
-  // 🟡 6th BALL WICKET
   if (d.state === "WICKET_OVER_END") {
     if (!wicketOverStep) {
       wicketOverStep = "BATSMAN_DONE_PENDING";
@@ -121,7 +138,6 @@ function handleStateUI(d) {
     }
   }
 
-  // 🟢 OVER END
   if (d.state === "OVER_END" && lastHandledEvent !== "OVER_END") {
     lastHandledEvent = "OVER_END";
     openPopup("BOWLER", "Select New Bowler");
