@@ -18,56 +18,53 @@ let wicketOverStep = null;
 const el = id => document.getElementById(id);
 
 /* =========================
-   LOAD LIVE SCORE
+   LOAD LIVE SCORE (OPTIMIZED)
 ========================= */
 function loadLiveScore() {
-  if (actionInProgress) return;
-
+  // Action జరుగుతున్నప్పుడు కూడా డేటా తెచ్చుకోవచ్చు, 
+  // కానీ పాపప్స్ ట్రిగ్గర్ అవ్వకుండా handleStateUI ని కంట్రోల్ చేస్తాం.
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
     .then(r => r.json())
     .then(d => {
-      if (!d || d.status !== "ok") {
-        el("state").innerText = "WAITING...";
-        return;
-      }
+      if (!d || d.status !== "ok") return;
 
-      el("teamScore").innerText =
-        `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
+      // Update UI Immediately
+      el("teamScore").innerText = `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
       el("state").innerText = d.state || "NORMAL";
 
       loadBatsmanStats(d.strikerId, d.nonStrikerId);
       loadBowlerStats(d.bowlerId);
 
-      handleStateUI(d);
+      // actionInProgress ఉన్నప్పుడు పాపప్ లాజిక్ రన్ చేయవద్దు
+      if (!actionInProgress) {
+        handleStateUI(d);
+      }
     })
-    .catch(err => {
-      console.error("Fetch Error:", err);
-      el("state").innerText = "OFFLINE";
-    });
+    .catch(err => console.error("Load Error:", err));
 }
 
 /* =========================
-   API HELPER
+   API HELPER (FAST REFLECT)
 ========================= */
 function callAction(url, force = false) {
   if (actionInProgress && !force) return;
-
+  
   actionInProgress = true;
-  el("state").innerText = "UPDATING...";
 
   fetch(url)
     .then(r => r.json())
     .then(res => {
-      console.log("Action Success:", res);
-      setTimeout(loadLiveScore, 1000);
+      // GSheet అప్‌డేట్ అయ్యాక వెంటనే UI అప్‌డేట్ చేయాలి
+      // ఇక్కడ వెయిటింగ్ అవసరం లేదు
+      loadLiveScore(); 
     })
     .catch(err => console.error("Action Error:", err))
     .finally(() => {
-      setTimeout(() => {
-        actionInProgress = false;
-      }, 1500);
+      // 500ms తర్వాత మళ్ళీ కొత్త పాపప్స్ కోసం అనుమతించాలి
+      setTimeout(() => { actionInProgress = false; }, 500);
     });
 }
+
 
 /* =========================
    BATSMEN
