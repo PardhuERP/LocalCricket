@@ -13,25 +13,31 @@ let lastEventKey = null;       // `${over}.${ball}:${state}`
 /* =========================
    LOAD LIVE SCORE
 ========================= */
+
 function loadLiveScore() {
   fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
     .then(r => r.json())
     .then(d => {
+
+      console.log("LIVE_STATE:", d); // 🔥 DEBUG (KEEP THIS)
+
       if (d.status !== "ok") return;
 
-      // HEADER (THIS WAS OK)
+      // HEADER
       el("teamScore").innerText =
         `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
+
       el("state").innerText = d.state;
 
-      // TABLES
+      // BATSMEN + BOWLER
       loadBatsmanStats(d.strikerId, d.nonStrikerId);
       renderBowler(d.bowlerId);
 
+      // POPUP LOGIC
       handleStateUI(d);
-    });
+    })
+    .catch(err => console.error("loadLiveScore error:", err));
 }
-
 /* =========================
    STATE CONTROLLER (FIXED)
 ========================= */
