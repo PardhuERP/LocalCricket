@@ -25,31 +25,32 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+function addTeam() {
+  const teamName = document.getElementById("teamName").value;
+  const shortName = document.getElementById("shortName").value;
+  const city = document.getElementById("city").value;
 
-function addTeam(){
-  const id = teamId.value.trim();
-  const name = teamName.value.trim();
-  if(!id || !name) return alert("Enter all fields");
+  if (!teamName || !city) {
+    alert("Team name and city required");
+    return;
+  }
 
-  fetch(`${API}?action=addTeam&teamId=${id}&teamName=${encodeURIComponent(name)}`)
-    .then(r=>r.json())
-    .then(()=>{ teamId.value=""; teamName.value=""; loadTeams(); });
-}
+  const url =
+    "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec" +
+    `?action=addTeam&teamName=${encodeURIComponent(teamName)}` +
+    `&shortName=${encodeURIComponent(shortName)}` +
+    `&city=${encodeURIComponent(city)}`;
 
-function loadTeams(){
-  fetch(`${API}?action=getTeams`)
-    .then(r=>r.json())
-    .then(d=>{
-      const box = document.getElementById("teamList");
-      box.innerHTML="";
-      (d.teams||[]).forEach(t=>{
-        box.innerHTML += `<div class="team">${t.teamId} - ${t.teamName}</div>`;
-      });
+  fetch(url)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === "ok") {
+        alert("Team Created\nID: " + d.teamId);
+      } else {
+        alert("Error: " + d.message);
+      }
     });
 }
-
-loadTeams();
 </script>
 </body>
 </html>
