@@ -1,6 +1,8 @@
 const API =
   "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+let ALL_TEAMS = [];
+let ALL_PLAYERS = [];
 /* =========================
    LOAD TEAMS
 ========================= */
