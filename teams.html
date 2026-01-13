@@ -16,19 +16,26 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 
 <div class="box">
   <h2>Add Team</h2>
-  <input id="teamId" placeholder="Team ID (RCB)">
+
+  <!-- ✅ teamId REMOVED -->
   <input id="teamName" placeholder="Team Name (Royal Challengers)">
+  <input id="shortName" placeholder="Short Name (RCB)">
+  <input id="city" placeholder="City (Bangalore)">
+
   <button onclick="addTeam()">Add Team</button>
 
   <h3>Teams</h3>
-  <div id="teamList"></div>
+  <div id="teamList">—</div>
 </div>
 
 <script>
+const API =
+  "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+
 function addTeam() {
-  const teamName = document.getElementById("teamName").value;
-  const shortName = document.getElementById("shortName").value;
-  const city = document.getElementById("city").value;
+  const teamName = document.getElementById("teamName").value.trim();
+  const shortName = document.getElementById("shortName").value.trim();
+  const city = document.getElementById("city").value.trim();
 
   if (!teamName || !city) {
     alert("Team name and city required");
@@ -36,8 +43,9 @@ function addTeam() {
   }
 
   const url =
-    "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec" +
-    `?action=addTeam&teamName=${encodeURIComponent(teamName)}` +
+    API +
+    `?action=addTeam` +
+    `&teamName=${encodeURIComponent(teamName)}` +
     `&shortName=${encodeURIComponent(shortName)}` +
     `&city=${encodeURIComponent(city)}`;
 
@@ -46,11 +54,18 @@ function addTeam() {
     .then(d => {
       if (d.status === "ok") {
         alert("Team Created\nID: " + d.teamId);
+
+        // clear inputs
+        document.getElementById("teamName").value = "";
+        document.getElementById("shortName").value = "";
+        document.getElementById("city").value = "";
       } else {
         alert("Error: " + d.message);
       }
-    });
+    })
+    .catch(err => alert("Network error"));
 }
 </script>
+
 </body>
 </html>
