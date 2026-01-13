@@ -2,102 +2,54 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Create Team</title>
+<title>Teams</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body{font-family:Arial;background:#f2f4f8;margin:0}
-.header{background:#0a7cff;color:#fff;padding:14px;text-align:center}
-.card{background:#fff;margin:12px;padding:12px;border-radius:8px}
-input,button{width:100%;padding:10px;margin-top:8px}
-button{background:#0a7cff;color:#fff;border:none;border-radius:6px}
+body{font-family:Arial;background:#f2f4f8;padding:20px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:400px;margin:auto}
+input,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
+button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
+.team{padding:8px;border-bottom:1px solid #ddd}
 </style>
 </head>
-
 <body>
 
-<div class="header">🏏 Create Team</div>
+<div class="box">
+  <h2>Add Team</h2>
+  <input id="teamId" placeholder="Team ID (RCB)">
+  <input id="teamName" placeholder="Team Name (Royal Challengers)">
+  <button onclick="addTeam()">Add Team</button>
 
-<div class="card">
-  <input id="teamName" placeholder="Enter Team Name">
-  <!-- 🔒 important: type="button" -->
-  <button type="button" onclick="createTeam()">Create Team</button>
-</div>
-
-<div class="card">
   <h3>Teams</h3>
-  <ul id="teams"></ul>
+  <div id="teamList"></div>
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbx1Rzd1N3KwiACih8ZBBSNvQYYW1IAt-qV9VhgvdhI9722kXH0HC3cDw9lTiktWdPKXqQ/exec";
+const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
-/***********************
- * LOAD TEAMS
- ***********************/
+function addTeam(){
+  const id = teamId.value.trim();
+  const name = teamName.value.trim();
+  if(!id || !name) return alert("Enter all fields");
+
+  fetch(`${API}?action=addTeam&teamId=${id}&teamName=${encodeURIComponent(name)}`)
+    .then(r=>r.json())
+    .then(()=>{ teamId.value=""; teamName.value=""; loadTeams(); });
+}
+
 function loadTeams(){
-  fetch(API + "?action=teams&t=" + Date.now()) // 🔥 cache buster
-    .then(r => r.json())
-    .then(d => {
-      let ul = document.getElementById("teams");
-      ul.innerHTML = "";
-
-      if(d.length === 0){
-        ul.innerHTML = "<li>No teams yet</li>";
-        return;
-      }
-
-      d.forEach(t => {
-        ul.innerHTML += `<li>${t.name}</li>`;
+  fetch(`${API}?action=getTeams`)
+    .then(r=>r.json())
+    .then(d=>{
+      const box = document.getElementById("teamList");
+      box.innerHTML="";
+      (d.teams||[]).forEach(t=>{
+        box.innerHTML += `<div class="team">${t.teamId} - ${t.teamName}</div>`;
       });
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Failed to load teams");
     });
 }
 
-/***********************
- * CREATE TEAM (GET)
- ***********************/
-function createTeam(){
-
-  let name = document.getElementById("teamName").value.trim();
-
-  if(!name){
-    alert("Enter team name");
-    return;
-  }
-
-  fetch(
-    API +
-    "?action=createTeam" +
-    "&team_name=" + encodeURIComponent(name) +
-    "&admin_id=ADMIN"
-  )
-  .then(r => r.json())
-  .then(res => {
-
-    if(res.status !== "ok"){
-      alert("Error creating team");
-      return;
-    }
-
-    alert("Team created successfully ✅");
-
-    document.getElementById("teamName").value = "";
-
-    loadTeams(); // refresh list
-  })
-  .catch(err => {
-    console.error(err);
-    alert("Network error");
-  });
-}
-
-// initial load
 loadTeams();
 </script>
-
 </body>
 </html>
