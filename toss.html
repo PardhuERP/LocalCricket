@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Match Toss</title>
@@ -9,34 +9,26 @@
 body{
   font-family: Arial;
   background:#f2f4f8;
-  padding:20px;
+  padding:20px
 }
 .box{
-  max-width:420px;
-  margin:auto;
   background:#fff;
-  padding:20px;
-  border-radius:14px;
-  box-shadow:0 6px 16px rgba(0,0,0,.12)
+  padding:16px;
+  border-radius:12px;
+  max-width:400px;
+  margin:auto
 }
-h2{margin-top:0}
 select,button{
   width:100%;
   padding:12px;
-  margin:10px 0;
+  margin:8px 0;
   font-size:16px
 }
 button{
   background:#0a7cff;
   color:#fff;
   border:none;
-  border-radius:8px;
-  cursor:pointer
-}
-.status{
-  margin-top:12px;
-  font-weight:bold;
-  text-align:center
+  border-radius:8px
 }
 </style>
 </head>
@@ -46,64 +38,56 @@ button{
 <div class="box">
   <h2>Match Toss</h2>
 
-  <!-- MATCH ID -->
-  <input id="matchId" placeholder="Match ID" />
-
-  <!-- TOSS WINNER -->
+  <!-- Toss Winner -->
   <select id="tossWinner">
     <option value="">-- Select Toss Winner --</option>
-    <option value="TEAM_A">Team A</option>
-    <option value="TEAM_B">Team B</option>
+    <option value="TEAM_A">TEAM A</option>
+    <option value="TEAM_B">TEAM B</option>
   </select>
 
-  <!-- DECISION -->
+  <!-- Decision -->
   <select id="decision">
-    <option value="">-- Choose Decision --</option>
+    <option value="">-- Toss Decision --</option>
     <option value="BAT">BAT</option>
     <option value="BOWL">BOWL</option>
   </select>
 
-  <button onclick="confirmToss()">Confirm Toss</button>
-
-  <div class="status" id="status"></div>
+  <button onclick="confirmToss()">CONFIRM TOSS</button>
 </div>
 
 <script>
 const API =
-  "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+"https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+
+const MATCH_ID = "MATCH_1767874129183";
 
 function confirmToss() {
-  const matchId = document.getElementById("matchId").value;
   const tossWinner = document.getElementById("tossWinner").value;
   const decision = document.getElementById("decision").value;
 
-  if (!matchId || !tossWinner || !decision) {
-    alert("All fields required");
+  if (!tossWinner || !decision) {
+    alert("Select Toss Winner and Decision");
     return;
   }
 
-  const url =
-    `${API}?action=confirmToss` +
-    `&matchId=${encodeURIComponent(matchId)}` +
-    `&tossWinner=${encodeURIComponent(tossWinner)}` +
-    `&decision=${encodeURIComponent(decision)}`;
-
-  document.getElementById("status").innerText = "Updating...";
-
-  fetch(url)
-    .then(r => r.json())
-    .then(d => {
-      if (d.status === "ok") {
-        document.getElementById("status").innerText =
-          "Toss Completed ✔️";
-      } else {
-        document.getElementById("status").innerText =
-          "Error: " + d.message;
-      }
-    })
-    .catch(() => {
-      document.getElementById("status").innerText = "API Error";
-    });
+  fetch(
+    API +
+    `?action=setToss` +
+    `&matchId=${MATCH_ID}` +
+    `&tossWinner=${tossWinner}` +
+    `&decision=${decision}`
+  )
+  .then(r => r.json())
+  .then(d => {
+    if (d.status === "ok") {
+      alert(
+        "Toss Winner : " + d.tossWinner +
+        "\nBatting First : " + d.battingFirst
+      );
+    } else {
+      alert("Error: " + d.message);
+    }
+  });
 }
 </script>
 
