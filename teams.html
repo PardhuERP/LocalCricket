@@ -2,105 +2,65 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Teams</title>
+<title>Add Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{font-family:Arial;background:#f2f4f8;padding:20px}
-.box{background:#fff;padding:16px;border-radius:12px;max-width:400px;margin:auto}
-input,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
+input,select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
 button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
-.team{padding:8px;border-bottom:1px solid #ddd}
+.player{padding:8px;border-bottom:1px solid #ddd}
 </style>
 </head>
+
 <body>
 
 <div class="box">
-  <h2>Add Team</h2>
+  <h2>Add Player</h2>
 
-  <!-- ✅ teamId REMOVED -->
-  <input id="teamName" placeholder="Team Name (Royal Challengers)">
-  <input id="shortName" placeholder="Short Name (RCB)">
-  <input id="city" placeholder="City (Bangalore)">
+  <!-- TEAM -->
+  <select id="teamSelect">
+    <option value="">Select Team</option>
+  </select>
 
-  <button onclick="addTeam()">Add Team</button>
+  <!-- PLAYER NAME -->
+  <input id="playerName" placeholder="Player Name *">
 
-  <h3>Teams</h3>
-  <div id="teamList">Loading...</div>
+  <!-- JERSEY -->
+  <input id="jerseyNo" placeholder="Jersey No (optional)" type="number">
+
+  <!-- ROLE -->
+  <select id="role">
+    <option value="">Select Role *</option>
+    <option>BATSMAN</option>
+    <option>BOWLER</option>
+    <option>ALL_ROUNDER</option>
+    <option>WICKET_KEEPER</option>
+  </select>
+
+  <!-- BATTING -->
+  <select id="battingStyle">
+    <option value="">Batting Style *</option>
+    <option>Right Hand Bat</option>
+    <option>Left Hand Bat</option>
+  </select>
+
+  <!-- BOWLING -->
+  <select id="bowlingStyle">
+    <option value="">Bowling Style *</option>
+    <option>Right Arm Fast</option>
+    <option>Left Arm Fast</option>
+    <option>Off Spin</option>
+    <option>Leg Spin</option>
+    <option>NA</option>
+  </select>
+
+  <button onclick="addPlayer()">Add Player</button>
+
+  <h3>Players</h3>
+  <div id="playerList"></div>
 </div>
 
-<script>
-const API =
-  "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
-
-/* =========================
-   ADD TEAM (already working)
-========================= */
-function addTeam() {
-  const teamName = document.getElementById("teamName").value.trim();
-  const shortName = document.getElementById("shortName").value.trim();
-  const city = document.getElementById("city").value.trim();
-
-  if (!teamName || !city) {
-    alert("Team name and city required");
-    return;
-  }
-
-  const url =
-    API +
-    `?action=addTeam` +
-    `&teamName=${encodeURIComponent(teamName)}` +
-    `&shortName=${encodeURIComponent(shortName)}` +
-    `&city=${encodeURIComponent(city)}`;
-
-  fetch(url)
-    .then(r => r.json())
-    .then(d => {
-      if (d.status === "ok") {
-        alert("Team Created\nID: " + d.teamId);
-
-        document.getElementById("teamName").value = "";
-        document.getElementById("shortName").value = "";
-        document.getElementById("city").value = "";
-
-        loadTeams(); // ✅ refresh list
-      } else {
-        alert(d.message);
-      }
-    });
-}
-
-/* =========================
-   LOAD TEAMS LIST ✅
-========================= */
-function loadTeams() {
-  fetch(API + "?action=getTeams")
-    .then(r => r.json())
-    .then(d => {
-      const box = document.getElementById("teamList");
-      box.innerHTML = "";
-
-      if (d.status !== "ok" || d.teams.length === 0) {
-        box.innerHTML = "<i>No teams found</i>";
-        return;
-      }
-
-      d.teams.forEach(t => {
-        box.innerHTML += `
-          <div class="team">
-            <b>${t.teamName}</b> (${t.shortName || "-"})<br>
-            ${t.city} • ${t.status}<br>
-            <small>${t.teamId}</small>
-          </div>
-        `;
-      });
-    });
-}
-
-/* =========================
-   INIT
-========================= */
-window.onload = loadTeams;
-</script>
-
+<script src="players.js"></script>
 </body>
 </html>
