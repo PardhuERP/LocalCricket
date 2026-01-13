@@ -3,6 +3,7 @@ const API =
 
 let ALL_TEAMS = [];
 let ALL_PLAYERS = [];
+
 /* =========================
    LOAD TEAMS
 ========================= */
@@ -10,7 +11,13 @@ function loadTeams() {
   fetch(API + "?action=getTeams")
     .then(r => r.json())
     .then(d => {
+      if (d.status !== "ok") return;
+
+      ALL_TEAMS = d.teams;
+
       const sel = document.getElementById("teamSelect");
+      sel.innerHTML = `<option value="">-- Select Team --</option>`;
+
       d.teams.forEach(t => {
         const op = document.createElement("option");
         op.value = t.teamId;
@@ -21,7 +28,7 @@ function loadTeams() {
 }
 
 /* =========================
-   GENERATE PLAYER ID
+   GENERATE PLAYER ID (KEEP AS-IS)
 ========================= */
 function generatePlayerId(teamId) {
   const key = "PLAYER_SEQ_" + teamId;
@@ -66,7 +73,9 @@ function addPlayer() {
       if (d.status === "ok") {
         alert("Player Added: " + playerId);
         clearForm();
-        loadPlayers();
+
+        // 🔁 Reload players & show only selected team
+        fetchPlayers(() => renderPlayersByTeam(teamId));
       } else {
         alert(d.message);
       }
@@ -74,24 +83,52 @@ function addPlayer() {
 }
 
 /* =========================
-   LOAD PLAYERS
+   LOAD ALL PLAYERS (ONCE)
 ========================= */
-function loadPlayers() {
+function fetchPlayers(callback) {
   fetch(API + "?action=getPlayers")
     .then(r => r.json())
     .then(d => {
-      const box = document.getElementById("playerList");
-      box.innerHTML = "";
-      d.players.forEach(p => {
-        box.innerHTML += `
-          <div class="player">
-            <b>${p.playerName}</b> (${p.playerId})<br>
-            ${p.role} | ${p.battingStyle} | ${p.bowlingStyle}
-          </div>`;
-      });
+      if (d.status !== "ok") return;
+      ALL_PLAYERS = d.players;
+      if (callback) callback();
     });
 }
 
+/* =========================
+   RENDER PLAYERS BY TEAM
+========================= */
+function renderPlayersByTeam(teamId) {
+  const box = document.getElementById("playerList");
+  box.innerHTML = "";
+
+  if (!teamId) {
+    box.style.display = "none";
+    return;
+  }
+
+  const teamPlayers = ALL_PLAYERS.filter(p => p.teamId === teamId);
+
+  if (teamPlayers.length === 0) {
+    box.innerHTML = "<i>No players for this team</i>";
+    box.style.display = "block";
+    return;
+  }
+
+  teamPlayers.forEach(p => {
+    box.innerHTML += `
+      <div class="player">
+        <b>${p.playerName}</b> (${p.playerId})<br>
+        ${p.role} | ${p.battingStyle} | ${p.bowlingStyle}
+      </div>`;
+  });
+
+  box.style.display = "block";
+}
+
+/* =========================
+   CLEAR FORM
+========================= */
 function clearForm() {
   playerNameInput.value = "";
   jerseyNoInput.value = "";
@@ -110,7 +147,12 @@ const roleSelect = document.getElementById("role");
 const battingStyleSelect = document.getElementById("battingStyle");
 const bowlingStyleSelect = document.getElementById("bowlingStyle");
 
+teamSelect.addEventListener("change", () => {
+  renderPlayersByTeam(teamSelect.value);
+});
+
 window.onload = () => {
   loadTeams();
-  loadPlayers();
+  fetchPlayers();               // load once
+  document.getElementById("playerList").style.display = "none"; // hide initially
 };
