@@ -25,13 +25,16 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
   <button onclick="addTeam()">Add Team</button>
 
   <h3>Teams</h3>
-  <div id="teamList">—</div>
+  <div id="teamList">Loading</div>
 </div>
 
 <script>
 const API =
   "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+/* =========================
+   ADD TEAM (already working)
+========================= */
 function addTeam() {
   const teamName = document.getElementById("teamName").value.trim();
   const shortName = document.getElementById("shortName").value.trim();
@@ -55,16 +58,48 @@ function addTeam() {
       if (d.status === "ok") {
         alert("Team Created\nID: " + d.teamId);
 
-        // clear inputs
         document.getElementById("teamName").value = "";
         document.getElementById("shortName").value = "";
         document.getElementById("city").value = "";
+
+        loadTeams(); // ✅ refresh list
       } else {
-        alert("Error: " + d.message);
+        alert(d.message);
       }
-    })
-    .catch(err => alert("Network error"));
+    });
 }
+
+/* =========================
+   LOAD TEAMS LIST ✅
+========================= */
+function loadTeams() {
+  fetch(API + "?action=getTeams")
+    .then(r => r.json())
+    .then(d => {
+      const box = document.getElementById("teamList");
+      box.innerHTML = "";
+
+      if (d.status !== "ok" || d.teams.length === 0) {
+        box.innerHTML = "<i>No teams found</i>";
+        return;
+      }
+
+      d.teams.forEach(t => {
+        box.innerHTML += `
+          <div class="team">
+            <b>${t.teamName}</b> (${t.shortName || "-"})<br>
+            ${t.city} • ${t.status}<br>
+            <small>${t.teamId}</small>
+          </div>
+        `;
+      });
+    });
+}
+
+/* =========================
+   INIT
+========================= */
+window.onload = loadTeams;
 </script>
 
 </body>
