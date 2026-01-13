@@ -34,10 +34,6 @@ function loadLiveScore() {
 
       loadBatsmanStats(d.strikerId, d.nonStrikerId);
       loadBowlerStats(d.bowlerId);
-
-      // actionInProgress ఉన్నప్పుడు పాపప్ లాజిక్ రన్ చేయవద్దు
-      if (!actionInProgress) {
-        handleStateUI(d);
       }
     })
     .catch(err => console.error("Load Error:", err));
@@ -48,20 +44,24 @@ function loadLiveScore() {
 ========================= */
 function callAction(url, force = false) {
   if (actionInProgress && !force) return;
-  
+
   actionInProgress = true;
+  el("state").innerText = "UPDATING...";
 
   fetch(url)
     .then(r => r.json())
     .then(res => {
-      // GSheet అప్‌డేట్ అయ్యాక వెంటనే UI అప్‌డేట్ చేయాలి
-      // ఇక్కడ వెయిటింగ్ అవసరం లేదు
-      loadLiveScore(); 
+      console.log("Action done:", res);
+
+      // 🔁 delayed refresh (Google Sheet sync)
+      setTimeout(loadLiveScore, 700);
+      setTimeout(loadLiveScore, 1400);
     })
-    .catch(err => console.error("Action Error:", err))
+    .catch(err => console.error("Action error:", err))
     .finally(() => {
-      // 500ms తర్వాత మళ్ళీ కొత్త పాపప్స్ కోసం అనుమతించాలి
-      setTimeout(() => { actionInProgress = false; }, 500);
+      setTimeout(() => {
+        actionInProgress = false;
+      }, 1500);
     });
 }
 
