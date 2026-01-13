@@ -194,6 +194,17 @@ function handleStateUI(d) {
   ) {
     openPopup("BOWLER", "Select New Bowler");
   }
+
+  function handleStateUI(d) {
+  if (d.lastBallId === lastProcessedBallId) return;
+
+if (d.lastBallType === "OVER_END") {
+  // open bowler popup
+}
+
+if (d.lastBallType === "WICKET") {
+  // open batsman popup
+}
 }
 
 /* =========================
