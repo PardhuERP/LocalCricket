@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Match Toss</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  font-family: Arial;
+  background:#f2f4f8;
+  padding:20px;
+}
+.box{
+  max-width:420px;
+  margin:auto;
+  background:#fff;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 6px 16px rgba(0,0,0,.12)
+}
+h2{margin-top:0}
+select,button{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  font-size:16px
+}
+button{
+  background:#0a7cff;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer
+}
+.status{
+  margin-top:12px;
+  font-weight:bold;
+  text-align:center
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Match Toss</h2>
+
+  <!-- MATCH ID -->
+  <input id="matchId" placeholder="Match ID" />
+
+  <!-- TOSS WINNER -->
+  <select id="tossWinner">
+    <option value="">-- Select Toss Winner --</option>
+    <option value="TEAM_A">Team A</option>
+    <option value="TEAM_B">Team B</option>
+  </select>
+
+  <!-- DECISION -->
+  <select id="decision">
+    <option value="">-- Choose Decision --</option>
+    <option value="BAT">BAT</option>
+    <option value="BOWL">BOWL</option>
+  </select>
+
+  <button onclick="confirmToss()">Confirm Toss</button>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const API =
+  "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+
+function confirmToss() {
+  const matchId = document.getElementById("matchId").value;
+  const tossWinner = document.getElementById("tossWinner").value;
+  const decision = document.getElementById("decision").value;
+
+  if (!matchId || !tossWinner || !decision) {
+    alert("All fields required");
+    return;
+  }
+
+  const url =
+    `${API}?action=confirmToss` +
+    `&matchId=${encodeURIComponent(matchId)}` +
+    `&tossWinner=${encodeURIComponent(tossWinner)}` +
+    `&decision=${encodeURIComponent(decision)}`;
+
+  document.getElementById("status").innerText = "Updating...";
+
+  fetch(url)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === "ok") {
+        document.getElementById("status").innerText =
+          "Toss Completed ✔️";
+      } else {
+        document.getElementById("status").innerText =
+          "Error: " + d.message;
+      }
+    })
+    .catch(() => {
+      document.getElementById("status").innerText = "API Error";
+    });
+}
+</script>
+
+</body>
+</html>
