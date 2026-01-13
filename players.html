@@ -2,28 +2,58 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Players</title>
+<title>Add Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{font-family:Arial;background:#f2f4f8;padding:20px}
-.box{background:#fff;padding:16px;border-radius:12px;max-width:450px;margin:auto}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
 input,select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
 button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 .player{padding:8px;border-bottom:1px solid #ddd}
 </style>
 </head>
+
 <body>
 
 <div class="box">
   <h2>Add Player</h2>
 
-  <input id="playerId" placeholder="Player ID (RCB_P01)">
-  <select id="teamId"></select>
-  <input id="playerName" placeholder="Player Name">
-  <input id="jerseyNo" placeholder="Jersey No">
-  <input id="role" placeholder="Role (BATSMAN)">
-  <input id="battingStyle" placeholder="Batting Style">
-  <input id="bowlingStyle" placeholder="Bowling Style">
+  <!-- TEAM -->
+  <select id="teamSelect">
+    <option value="">Select Team</option>
+  </select>
+
+  <!-- PLAYER NAME -->
+  <input id="playerName" placeholder="Player Name *">
+
+  <!-- JERSEY -->
+  <input id="jerseyNo" placeholder="Jersey No (optional)" type="number">
+
+  <!-- ROLE -->
+  <select id="role">
+    <option value="">Select Role *</option>
+    <option>BATSMAN</option>
+    <option>BOWLER</option>
+    <option>ALL_ROUNDER</option>
+    <option>WICKET_KEEPER</option>
+  </select>
+
+  <!-- BATTING -->
+  <select id="battingStyle">
+    <option value="">Batting Style *</option>
+    <option>Right Hand Bat</option>
+    <option>Left Hand Bat</option>
+  </select>
+
+  <!-- BOWLING -->
+  <select id="bowlingStyle">
+    <option value="">Bowling Style *</option>
+    <option>Right Arm Fast</option>
+    <option>Left Arm Fast</option>
+    <option>Off Spin</option>
+    <option>Leg Spin</option>
+    <option>NA</option>
+  </select>
 
   <button onclick="addPlayer()">Add Player</button>
 
@@ -31,52 +61,6 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
   <div id="playerList"></div>
 </div>
 
-<script>
-const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
-
-function loadTeams(){
-  fetch(`${API}?action=getTeams`)
-    .then(r=>r.json())
-    .then(d=>{
-      const sel = document.getElementById("teamId");
-      sel.innerHTML="";
-      (d.teams||[]).forEach(t=>{
-        sel.innerHTML += `<option value="${t.teamId}">${t.teamName}</option>`;
-      });
-    });
-}
-
-function addPlayer(){
-  const url =
-    `${API}?action=addPlayer` +
-    `&playerId=${playerId.value}` +
-    `&teamId=${teamId.value}` +
-    `&playerName=${encodeURIComponent(playerName.value)}` +
-    `&jerseyNo=${jerseyNo.value}` +
-    `&role=${role.value}` +
-    `&battingStyle=${encodeURIComponent(battingStyle.value)}` +
-    `&bowlingStyle=${encodeURIComponent(bowlingStyle.value)}` +
-    `&isActive=TRUE`;
-
-  fetch(url)
-    .then(r=>r.json())
-    .then(()=>{ loadPlayers(); });
-}
-
-function loadPlayers(){
-  fetch(`${API}?action=getPlayers`)
-    .then(r=>r.json())
-    .then(d=>{
-      const box = document.getElementById("playerList");
-      box.innerHTML="";
-      (d.players||[]).forEach(p=>{
-        box.innerHTML += `<div class="player">${p.playerName} (${p.teamId})</div>`;
-      });
-    });
-}
-
-loadTeams();
-loadPlayers();
-</script>
+<script src="players.js"></script>
 </body>
 </html>
