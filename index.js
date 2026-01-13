@@ -311,6 +311,14 @@ function addWicket() {
 }
 }
 
+function runOut(runs) {
+  const out = confirm("Is NON-STRIKER out?") ? "NON_STRIKER" : "STRIKER";
+
+  callAction(
+    `${API}?action=addRunOut&matchId=${MATCH_ID}&out=${out}&runs=${runs}`,
+    true
+  );
+}
 
 function undoBall() {
   lastHandledEvent = null;
