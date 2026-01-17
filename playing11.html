@@ -8,11 +8,10 @@
 body{font-family:Arial;background:#f2f4f8;padding:20px}
 .box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
 select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
-.player{display:flex;align-items:center;gap:8px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}
-.role{margin-left:auto;font-size:12px;color:#777}
-.head{font-size:12px;color:#555;width:60px;text-align:center}
+.player{display:flex;align-items:center;gap:6px;font-size:14px;padding:6px 0;border-bottom:1px solid #eee}
 button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
-.count{font-size:13px;color:#777;margin:6px 0;text-align:right}
+.subBtn{background:#ff9800}
+h3{margin-top:10px}
 </style>
 </head>
 <body>
@@ -20,26 +19,19 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 <div class="box">
 <h2>Select Playing 11</h2>
 
-<label><b>Select Team</b></label>
 <select id="teamSelect" onchange="loadPlayers()"></select>
 
-<div class="count" id="count">0 / 11 selected</div>
-
-<div style="display:flex;font-size:12px;color:#555;margin-top:6px">
-  <div style="width:24px"></div>
-  <div class="head">CAP</div>
-  <div class="head">WK</div>
-  <div style="flex:1"></div>
-</div>
-
+<h3 id="modeTitle">Playing 11</h3>
 <div id="players"></div>
 
-<button onclick="savePlaying11()">SAVE PLAYING11</button>
+<button id="saveBtn" onclick="savePlaying11()">SAVE PLAYING11</button>
 </div>
 
 <script>
 const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 const MATCH_ID="MATCH_1768624533546";
+
+let mode="PLAYING"; // PLAYING / SUBSTITUTE
 
 function loadTeams(){
 fetch(`${API}?action=getTeams`)
@@ -55,7 +47,7 @@ teamSelect.innerHTML=html;
 
 function loadPlayers(){
 const teamId=teamSelect.value;
-if(!teamId){ players.innerHTML=""; return; }
+if(!teamId)return;
 
 fetch(`${API}?action=getPlayers&teamId=${teamId}`)
 .then(r=>r.json())
@@ -64,41 +56,59 @@ players.innerHTML="";
 d.players.forEach(p=>{
 players.innerHTML+=`
 <div class="player">
-<input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
-<input type="radio" name="captain" value="${p.playerId}">
-<input type="radio" name="keeper" value="${p.playerId}">
+<input type="checkbox" class="p" value="${p.playerId}">
 <span>${p.playerName}</span>
 </div>`;
 });
-updateCount();
 });
-}
-
-function updateCount(){
-const n=document.querySelectorAll(".play:checked").length;
-count.innerText=`${n} / 11 selected`;
 }
 
 function savePlaying11(){
 const teamId=teamSelect.value;
-const plays=[...document.querySelectorAll(".play:checked")];
-if(plays.length!==11) return alert("Select exactly 11 players");
+const selected=[...document.querySelectorAll(".p:checked")];
 
-const captain=document.querySelector("input[name=captain]:checked")?.value||"";
-const keeper=document.querySelector("input[name=keeper]:checked")?.value||"";
+if(mode==="PLAYING"){
+if(selected.length!==11)return alert("Select exactly 11 players");
 
-const data=plays.map(p=>({
+const data=selected.map(p=>({
 playerId:p.value,
 role:"PLAYING",
-isCaptain:p.value===captain,
-isKeeper:p.value===keeper,
+isCaptain:false,
+isKeeper:false,
 isPlaying:true,
 isSubstitute:false
 }));
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
 .then(r=>r.json())
-.then(()=>alert("Playing11 Saved ✅"));
+.then(d=>{
+mode="SUBSTITUTE";
+modeTitle.innerText="Select Substitutes (Max 3)";
+saveBtn.innerText="SAVE SUBSTITUTES";
+saveBtn.className="subBtn";
+document.querySelectorAll(".p").forEach(c=>c.checked=false);
+});
+}
+
+else{
+if(selected.length>3)return alert("Max 3 substitutes only");
+
+const data=selected.map(p=>({
+playerId:p.value,
+role:"SUBSTITUTE",
+isCaptain:false,
+isKeeper:false,
+isPlaying:false,
+isSubstitute:true
+}));
+
+fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
+.then(r=>r.json())
+.then(d=>{
+alert("Substitutes Saved ✅ Squad Complete");
+location.reload();
+});
+}
 }
 
 loadTeams();
