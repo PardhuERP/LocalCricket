@@ -8,10 +8,12 @@
 body{font-family:Arial;background:#f2f4f8;padding:20px}
 .box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
 select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
-.player{display:flex;align-items:center;gap:6px;font-size:14px;padding:6px 0;border-bottom:1px solid #eee}
+.player{display:flex;align-items:center;gap:8px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}
+.role{margin-left:auto;font-size:12px;color:#777}
+.head{font-size:12px;color:#555;width:60px;text-align:center}
 button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
-.subBtn{background:#ff9800}
-h3{margin-top:10px}
+.count{font-size:13px;color:#777;margin:6px 0;text-align:right}
+.sub-title{margin-top:20px;font-size:16px;font-weight:bold}
 </style>
 </head>
 <body>
@@ -19,19 +21,30 @@ h3{margin-top:10px}
 <div class="box">
 <h2>Select Playing 11</h2>
 
+<label><b>Select Team</b></label>
 <select id="teamSelect" onchange="loadPlayers()"></select>
 
-<h3 id="modeTitle">Playing 11</h3>
+<div class="count" id="count">0 / 11 selected</div>
+
+<div style="display:flex;font-size:12px;color:#555;margin-top:6px">
+  <div style="width:24px"></div>
+  <div class="head">CAP</div>
+  <div class="head">WK</div>
+  <div style="flex:1"></div>
+</div>
+
 <div id="players"></div>
 
-<button id="saveBtn" onclick="savePlaying11()">SAVE PLAYING11</button>
+<button onclick="savePlaying11()">SAVE PLAYING11</button>
+
+<div class="sub-title">Select Substitutes (3)</div>
+<div id="subs"></div>
+<button onclick="saveSubs()">SAVE SUBSTITUTES</button>
 </div>
 
 <script>
 const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 const MATCH_ID="MATCH_1768624533546";
-
-let mode="PLAYING"; // PLAYING / SUBSTITUTE
 
 function loadTeams(){
 fetch(`${API}?action=getTeams`)
@@ -47,53 +60,74 @@ teamSelect.innerHTML=html;
 
 function loadPlayers(){
 const teamId=teamSelect.value;
-if(!teamId)return;
+if(!teamId){ players.innerHTML=""; subs.innerHTML=""; return; }
 
 fetch(`${API}?action=getPlayers&teamId=${teamId}`)
 .then(r=>r.json())
 .then(d=>{
 players.innerHTML="";
+subs.innerHTML="";
+
 d.players.forEach(p=>{
 players.innerHTML+=`
 <div class="player">
-<input type="checkbox" class="p" value="${p.playerId}">
+<input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
+<input type="radio" name="captain" value="${p.playerId}">
+<input type="radio" name="keeper" value="${p.playerId}">
+<span>${p.playerName}</span>
+</div>`;
+
+subs.innerHTML+=`
+<div class="player">
+<input type="checkbox" class="sub" value="${p.playerId}" onchange="limitSubs()">
 <span>${p.playerName}</span>
 </div>`;
 });
+updateCount();
 });
+}
+
+function updateCount(){
+const n=document.querySelectorAll(".play:checked").length;
+count.innerText=`${n} / 11 selected`;
+}
+
+function limitSubs(){
+const subsChecked=document.querySelectorAll(".sub:checked");
+if(subsChecked.length>3){
+alert("Only 3 substitutes allowed");
+subsChecked[subsChecked.length-1].checked=false;
+}
 }
 
 function savePlaying11(){
 const teamId=teamSelect.value;
-const selected=[...document.querySelectorAll(".p:checked")];
+const plays=[...document.querySelectorAll(".play:checked")];
+if(plays.length!==11) return alert("Select exactly 11 players");
 
-if(mode==="PLAYING"){
-if(selected.length!==11)return alert("Select exactly 11 players");
+const captain=document.querySelector("input[name=captain]:checked")?.value||"";
+const keeper=document.querySelector("input[name=keeper]:checked")?.value||"";
 
-const data=selected.map(p=>({
+const data=plays.map(p=>({
 playerId:p.value,
 role:"PLAYING",
-isCaptain:false,
-isKeeper:false,
+isCaptain:p.value===captain,
+isKeeper:p.value===keeper,
 isPlaying:true,
 isSubstitute:false
 }));
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
 .then(r=>r.json())
-.then(d=>{
-mode="SUBSTITUTE";
-modeTitle.innerText="Select Substitutes (Max 3)";
-saveBtn.innerText="SAVE SUBSTITUTES";
-saveBtn.className="subBtn";
-document.querySelectorAll(".p").forEach(c=>c.checked=false);
-});
+.then(()=>alert("Playing11 Saved ✅"));
 }
 
-else{
-if(selected.length>3)return alert("Max 3 substitutes only");
+function saveSubs(){
+const teamId=teamSelect.value;
+const subs=[...document.querySelectorAll(".sub:checked")];
+if(subs.length!==3) return alert("Select exactly 3 substitutes");
 
-const data=selected.map(p=>({
+const data=subs.map(p=>({
 playerId:p.value,
 role:"SUBSTITUTE",
 isCaptain:false,
@@ -104,11 +138,7 @@ isSubstitute:true
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
 .then(r=>r.json())
-.then(d=>{
-alert("Substitutes Saved ✅ Squad Complete");
-location.reload();
-});
-}
+.then(()=>alert("Substitutes Saved ✅"));
 }
 
 loadTeams();
