@@ -62,19 +62,36 @@ players.innerHTML+=`
 }
 
 function save(){
-const teamId=teamSelect.value;
-const play=[...document.querySelectorAll(".play:checked")];
-if(play.length!==11) return alert("Select exactly 11 players");
+    const teamId = teamSelect.value;
+    const play = [...document.querySelectorAll(".play:checked")];
+    if(play.length !== 11) return alert("Select exactly 11 players");
 
-const cap=document.querySelector("input[name=cap]:checked")?.value;
-const wk=document.querySelector("input[name=wk]:checked")?.value;
+    const cap = document.querySelector("input[name=cap]:checked")?.value;
+    const wk = document.querySelector("input[name=wk]:checked")?.value;
 
-const data=play.map(p=>({
-playerId:p.value,
-playerName:p.dataset.name,
-isCaptain:p.value===cap,
-isKeeper:p.value===wk
-}));
+    const data = play.map(p => ({
+        playerId: p.value,
+        playerName: p.dataset.name,
+        isCaptain: p.value === cap,
+        isKeeper: p.value === wk
+    }));
+
+    // POST మెథడ్ ఉపయోగిస్తున్నాం - దీనివల్ల ఆర్డర్ మారదు
+    fetch(API, {
+        method: "POST",
+        mode: "no-cors", // క్రాస్ ఆరిజిన్ ఇష్యూ రాకుండా
+        cache: "no-cache",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            action: "savePlaying11",
+            matchId: MATCH_ID,
+            teamId: teamId,
+            players: data
+        })
+    })
+    .then(() => alert("Saved Successfully ✅ (Wait a few seconds for sheet to update)"));
+}
+
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
 .then(r=>r.json())
