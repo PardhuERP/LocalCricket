@@ -54,33 +54,39 @@ teamSelect.innerHTML=html;
 }
 
 function loadPlayers(){
-const teamId=teamSelect.value;
-if(!teamId){ players.innerHTML=""; return; }
+  const teamId = teamSelect.value;
+  if(!teamId){ 
+    players.innerHTML=""; 
+    return; 
+  }
 
-fetch(`${API}?action=getPlayers&teamId=${teamId}`)
-.then(r=>r.json())
-.then(d=>{
-players.innerHTML="";
-d.players.forEach(p=>{
-players.innerHTML+=`
-<div class="player">
-<input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
-<input type="radio" name="captain" value="${p.playerId}">
-<input type="radio" name="keeper" value="${p.playerId}">
-<input type="checkbox" class="sub" value="${p.playerId}" onchange="syncSub(this)">
-<span>${p.playerName}</span>
-</div>`;
-});
-updateCount();
-});
+  fetch(`${API}?action=getPlayers&teamId=${teamId}`)
+  .then(r=>r.json())
+  .then(d=>{
+    players.innerHTML="";
+
+    d.players.forEach(p=>{
+      players.innerHTML += `
+      <div class="player">
+        <input type="checkbox" class="play" value="${p.playerId}">
+        <input type="radio" name="captain" value="${p.playerId}">
+        <input type="radio" name="keeper" value="${p.playerId}">
+        <input type="checkbox" class="sub" value="${p.playerId}">
+        <span>${p.playerName}</span>
+      </div>`;
+    });
+
+    // ✅ AFTER rendering attach sync
+    document.querySelectorAll(".play").forEach(playBox=>{
+      playBox.addEventListener("change", ()=>{
+        const pid = playBox.value;
+        const subBox = document.querySelector(`.sub[value="${pid}"]`);
+        if(playBox.checked) subBox.checked = false;
+        updateCount();
+      });
+    });
+  });
 }
-
-const playBox = document.querySelector(`.play[value="${p.playerId}"]`);
-const subBox  = document.querySelector(`.sub[value="${p.playerId}"]`);
-
-playBox.addEventListener("change", () => {
-  if (playBox.checked) subBox.checked = false;
-});
 
 function updateCount(){
 const n=document.querySelectorAll(".play:checked").length;
