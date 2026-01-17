@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Playing11</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f2f4f8;padding:20px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
+.player{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #eee;font-size:14px}
+.head{width:40px;text-align:center;font-size:12px;color:#555}
+button,select{width:100%;padding:12px;margin-top:10px;font-size:16px}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h3>Playing11 + Subs</h3>
+<select id="team"></select>
+
+<div style="display:flex;margin-top:8px">
+<div class="head">P</div><div class="head">C</div><div class="head">K</div><div class="head">S</div><div style="flex:1"></div>
+</div>
+
+<div id="players"></div>
+<button onclick="save()">SAVE</button>
+</div>
+
+<script>
+const API="YOUR_DEPLOY_URL";
+const MATCH="MATCH_1768624533546";
+
+function loadTeams(){
+fetch(API+"?action=getTeams")
+.then(r=>r.json())
+.then(d=>{
+team.innerHTML="<option value=''>Select Team</option>";
+d.teams.forEach(t=>{
+team.innerHTML+=`<option value="${t.teamId}">${t.teamName}</option>`;
+});
+});
+}
+
+team.onchange=()=>{
+fetch(API+`?action=getPlayers&teamId=${team.value}`)
+.then(r=>r.json())
+.then(d=>{
+players.innerHTML="";
+d.players.forEach(p=>{
+players.innerHTML+=`
+<div class="player">
+<input type="checkbox" class="play" value="${p.playerId}">
+<input type="radio" name="cap" value="${p.playerId}">
+<input type="radio" name="wk" value="${p.playerId}">
+<input type="checkbox" class="sub" value="${p.playerId}">
+<span>${p.playerName}</span>
+</div>`;
+});
+});
+};
+
+function save(){
+const play=[...document.querySelectorAll(".play:checked")];
+const sub=[...document.querySelectorAll(".sub:checked")];
+const cap=document.querySelector("input[name=cap]:checked")?.value;
+const wk=document.querySelector("input[name=wk]:checked")?.value;
+
+if(play.length<11) return alert("Minimum 11 players");
+if(play.length>14) return alert("Max 14 allowed");
+
+const extra=play.length-11;
+if(extra>0 && sub.length!==extra) return alert("Mark extra players as SUB");
+
+const data=[];
+play.forEach(p=>data.push({playerId:p.value,role:"PLAYING",isCaptain:p.value===cap,isKeeper:p.value===wk,isPlaying:true,isSubstitute:false}));
+sub.forEach(p=>data.push({playerId:p.value,role:"SUBSTITUTE",isPlaying:false,isSubstitute:true}));
+
+fetch(API+`?action=savePlaying11&matchId=${MATCH}&teamId=${team.value}&players=${encodeURIComponent(JSON.stringify(data))}`)
+.then(r=>r.json())
+.then(d=>alert("Saved "+d.count));
+}
+
+loadTeams();
+</script>
+</body>
+</html>
