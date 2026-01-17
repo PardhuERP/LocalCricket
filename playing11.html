@@ -75,6 +75,13 @@ updateCount();
 });
 }
 
+const playBox = document.querySelector(`.play[value="${p.playerId}"]`);
+const subBox  = document.querySelector(`.sub[value="${p.playerId}"]`);
+
+playBox.addEventListener("change", () => {
+  if (playBox.checked) subBox.checked = false;
+});
+
 function updateCount(){
 const n=document.querySelectorAll(".play:checked").length;
 count.innerText=`${n} selected`;
