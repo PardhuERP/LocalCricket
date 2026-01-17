@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Match Request</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:Arial;background:#f2f4f8;padding:20px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
+select,input,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
+button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
+.req{padding:10px;border-bottom:1px solid #ddd;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Create Match Request</h2>
+
+  <label>From Team</label>
+  <select id="fromTeam"></select>
+
+  <label>To Team</label>
+  <select id="toTeam"></select>
+
+  <label>Overs</label>
+  <input id="overs" type="number" placeholder="10">
+
+  <label>Match Type</label>
+  <select id="matchType">
+    <option value="FRIENDLY">Friendly</option>
+    <option value="TOURNAMENT">Tournament</option>
+  </select>
+
+  <label>Venue</label>
+  <input id="venue" placeholder="Hyderabad">
+
+  <label>Match Date</label>
+  <input id="matchDate" type="datetime-local">
+
+  <button onclick="sendRequest()">Send Request</button>
+
+  <h3>Sent Requests</h3>
+  <div id="sentList"></div>
+</div>
+
+<script>
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+
+function loadTeams(){
+fetch(API+"?action=getTeams")
+.then(r=>r.json())
+.then(d=>{
+if(d.status!=="ok") return;
+const f=document.getElementById("fromTeam");
+const t=document.getElementById("toTeam");
+f.innerHTML='<option value="">Select</option>';
+t.innerHTML='<option value="">Select</option>';
+d.teams.forEach(team=>{
+f.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;
+t.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;
+});
+});
+}
+
+function sendRequest(){
+const from=document.getElementById("fromTeam").value;
+const to=document.getElementById("toTeam").value;
+const overs=document.getElementById("overs").value;
+const venue=document.getElementById("venue").value;
+const date=document.getElementById("matchDate").value;
+const type=document.getElementById("matchType").value;
+
+if(!from||!to||!overs||!venue||!date){
+alert("Fill all fields");return;
+}
+
+const url=API+
+`?action=createMatchRequest&fromTeamId=${from}&toTeamId=${to}&overs=${overs}&matchType=${type}&venue=${encodeURIComponent(venue)}&matchDate=${date}`;
+
+fetch(url).then(r=>r.json()).then(d=>{
+alert("Request Sent");
+});
+}
+
+loadTeams();
+</script>
+</body>
+</html>
