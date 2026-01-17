@@ -8,8 +8,9 @@
 body{font-family:Arial;background:#f2f4f8;padding:20px}
 .box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
 select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
-.player{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;font-size:14px;padding:8px 0;border-bottom:1px solid #eee;align-items:center}
-.head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;font-size:12px;color:#666;font-weight:bold}
+.player{display:flex;align-items:center;gap:10px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}
+.head{font-size:12px;color:#555;width:50px;text-align:center}
+.count{font-size:13px;color:#777;margin:6px 0;text-align:right}
 button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 </style>
 </head>
@@ -18,15 +19,21 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 <div class="box">
 <h2>Select Playing 11</h2>
 
+<label><b>Select Team</b></label>
 <select id="teamSelect" onchange="loadPlayers()"></select>
 
-<div class="head">
-<div>NAME</div><div>PLAY</div><div>C</div><div>WK</div>
+<div class="count" id="count">0 selected</div>
+
+<div style="display:flex;font-size:12px;color:#555;margin-top:6px">
+<div class="head">PLAY</div>
+<div class="head">CAP</div>
+<div class="head">WK</div>
+<div style="flex:1"></div>
 </div>
 
 <div id="players"></div>
 
-<button onclick="save()">SAVE PLAYING11</button>
+<button onclick="savePlaying11()">SAVE PLAYING11</button>
 </div>
 
 <script>
@@ -37,65 +44,64 @@ function loadTeams(){
 fetch(`${API}?action=getTeams`)
 .then(r=>r.json())
 .then(d=>{
-let h=`<option value="">-- Select Team --</option>`;
-d.teams.forEach(t=>h+=`<option value="${t.teamId}">${t.teamName}</option>`);
-teamSelect.innerHTML=h;
+let html=`<option value="">-- Select Team --</option>`;
+d.teams.forEach(t=>{
+html+=`<option value="${t.teamId}">${t.teamName}</option>`;
+});
+teamSelect.innerHTML=html;
 });
 }
 
 function loadPlayers(){
 const teamId=teamSelect.value;
 players.innerHTML="";
+if(!teamId) return;
+
 fetch(`${API}?action=getPlayers&teamId=${teamId}`)
 .then(r=>r.json())
 .then(d=>{
 d.players.forEach(p=>{
 players.innerHTML+=`
 <div class="player">
-<div>${p.playerName}</div>
-<div><input type="checkbox" class="play" value="${p.playerId}" data-name="${p.playerName}"></div>
-<div><input type="radio" name="cap" value="${p.playerId}"></div>
-<div><input type="radio" name="wk" value="${p.playerId}"></div>
+<input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
+<input type="radio" name="captain" value="${p.playerId}">
+<input type="radio" name="keeper" value="${p.playerId}">
+<span>${p.playerName}</span>
 </div>`;
 });
+updateCount();
 });
 }
 
-function save(){
-    const teamId = teamSelect.value;
-    const play = [...document.querySelectorAll(".play:checked")];
-    if(play.length !== 11) return alert("Select exactly 11 players");
-
-    const cap = document.querySelector("input[name=cap]:checked")?.value;
-    const wk = document.querySelector("input[name=wk]:checked")?.value;
-
-    const data = play.map(p => ({
-        playerId: p.value,
-        playerName: p.dataset.name,
-        isCaptain: p.value === cap,
-        isKeeper: p.value === wk
-    }));
-
-    // POST మెథడ్ ఉపయోగిస్తున్నాం - దీనివల్ల ఆర్డర్ మారదు
-    fetch(API, {
-        method: "POST",
-        mode: "no-cors", // క్రాస్ ఆరిజిన్ ఇష్యూ రాకుండా
-        cache: "no-cache",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            action: "savePlaying11",
-            matchId: MATCH_ID,
-            teamId: teamId,
-            players: data
-        })
-    })
-    .then(() => alert("Saved Successfully ✅ (Wait a few seconds for sheet to update)"));
+function updateCount(){
+const n=document.querySelectorAll(".play:checked").length;
+count.innerText=`${n} selected`;
 }
 
+function savePlaying11(){
+const teamId=teamSelect.value;
+const playing=[...document.querySelectorAll(".play:checked")].map(p=>p.value);
+
+if(playing.length!==11) return alert("Select exactly 11 players");
+
+const captain=document.querySelector("input[name=captain]:checked")?.value||"";
+const keeper=document.querySelector("input[name=keeper]:checked")?.value||"";
+
+if(!playing.includes(captain)) return alert("Select captain from playing 11");
+if(!playing.includes(keeper)) return alert("Select keeper from playing 11");
+
+const data=playing.map(pid=>({
+playerId:pid,
+role:"PLAYING",
+isCaptain:pid===captain,
+isKeeper:pid===keeper,
+isPlaying:true,
+isSubstitute:false
+}));
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
 .then(r=>r.json())
-.then(d=>alert("Saved ✅"));
+.then(res=>alert("Playing11 Saved ✅"));
 }
 
 loadTeams();
