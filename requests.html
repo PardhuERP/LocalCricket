@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Incoming Requests</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:Arial;background:#f2f4f8;padding:20px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:500px;margin:auto}
+.req{padding:12px;border-bottom:1px solid #ddd;font-size:14px}
+button{padding:6px 12px;border:none;border-radius:6px;margin-right:6px;cursor:pointer}
+.approve{background:#4caf50;color:#fff}
+.reject{background:#e53935;color:#fff}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Incoming Match Requests</h2>
+  <div id="reqList">Loading...</div>
+</div>
+
+<script>
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+
+// 🔴 Change this to your logged teamId
+const TEAM_ID="TEAM_B";
+
+function loadRequests(){
+fetch(API+`?action=getMatchRequests&teamId=${TEAM_ID}`)
+.then(r=>r.json())
+.then(d=>{
+if(d.status!=="ok"){reqList.innerHTML="No Requests";return;}
+const box=document.getElementById("reqList");
+box.innerHTML="";
+d.incoming.forEach(r=>{
+box.innerHTML+=`
+<div class="req">
+<b>${r.fromTeamId}</b> requested ${r.overs} overs<br>
+📍 ${r.venue}<br>
+📅 ${new Date(r.matchDate).toLocaleString()}<br>
+<button class="approve" onclick="approve('${r.requestId}')">Approve</button>
+<button class="reject" onclick="reject('${r.requestId}')">Reject</button>
+</div>`;
+});
+});
+}
+
+function approve(id){
+fetch(API+`?action=approveRequest&requestId=${id}`)
+.then(()=>{alert("Approved & Match Created");loadRequests();});
+}
+
+function reject(id){
+fetch(API+`?action=rejectRequest&requestId=${id}`)
+.then(()=>{alert("Rejected");loadRequests();});
+}
+
+loadRequests();
+</script>
+</body>
+</html>
