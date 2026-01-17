@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Playing 11</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f2f4f8;padding:20px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
+select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
+.player{display:flex;align-items:center;gap:6px;font-size:14px;padding:6px 0;border-bottom:1px solid #eee}
+.role{margin-left:auto;font-size:12px;color:#777}
+button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>Select Playing 11</h2>
+
+<select id="teamSelect" onchange="loadPlayers()"></select>
+
+<div id="players"></div>
+
+<button onclick="savePlaying11()">SAVE PLAYING11</button>
+</div>
+
+<script>
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+const MATCH_ID="MATCH_1768624533546";
+
+function loadTeams(){
+fetch(`${API}?action=getTeams`)
+.then(r=>r.json())
+.then(d=>{
+let html=`<option value="">-- Select Team --</option>`;
+d.teams.forEach(t=>{
+html+=`<option value="${t.teamId}">${t.teamName}</option>`;
+});
+document.getElementById("teamSelect").innerHTML=html;
+});
+}
+
+function loadPlayers(){
+const teamId=document.getElementById("teamSelect").value;
+if(!teamId)return;
+
+fetch(`${API}?action=getPlayers&teamId=${teamId}`)
+.then(r=>r.json())
+.then(d=>{
+const box=document.getElementById("players");
+box.innerHTML="";
+d.players.forEach(p=>{
+box.innerHTML+=`
+<div class="player">
+<input type="checkbox" class="play" value="${p.playerId}">
+<input type="radio" name="captain" value="${p.playerId}">
+<input type="radio" name="keeper" value="${p.playerId}">
+<span>${p.playerName}</span>
+</div>`;
+});
+});
+}
+
+function savePlaying11(){
+const teamId=document.getElementById("teamSelect").value;
+const plays=[...document.querySelectorAll(".play:checked")];
+
+if(plays.length!==11)return alert("Select exactly 11 players");
+
+const captain=document.querySelector("input[name=captain]:checked")?.value||"";
+const keeper=document.querySelector("input[name=keeper]:checked")?.value||"";
+
+const players=plays.map(c=>({
+playerId:c.value,
+role:"PLAYING",
+isCaptain:c.value===captain,
+isKeeper:c.value===keeper,
+isPlaying:true,
+isSubstitute:false
+}));
+
+const url=`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(players))}`;
+
+fetch(url)
+.then(r=>r.json())
+.then(d=>alert("Saved Successfully"));
+}
+
+loadTeams();
+</script>
+</body>
+</html>
