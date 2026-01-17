@@ -4,37 +4,38 @@
 <meta charset="UTF-8">
 <title>Playing 11</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 body{font-family:Arial;background:#f2f4f8;padding:20px}
 .box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
 select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
-.player{display:flex;align-items:center;gap:8px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}
-.head{font-size:12px;color:#555;width:50px;text-align:center}
+.player{display:flex;align-items:center;gap:10px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}
+.head{font-size:12px;color:#555;width:60px;text-align:center}
 .count{font-size:13px;color:#777;margin:6px 0;text-align:right}
 button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 </style>
 </head>
+
 <body>
 
 <div class="box">
-<h2>Select Playing 11 + Subs</h2>
+<h2>Select Playing 11</h2>
 
 <label><b>Select Team</b></label>
 <select id="teamSelect" onchange="loadPlayers()"></select>
 
-<div class="count" id="count">0 selected</div>
+<div class="count" id="count">0 / 11 selected</div>
 
 <div style="display:flex;font-size:12px;color:#555;margin-top:6px">
 <div class="head">PLAY</div>
 <div class="head">CAP</div>
 <div class="head">WK</div>
-<div class="head">SUB</div>
 <div style="flex:1"></div>
 </div>
 
 <div id="players"></div>
 
-<button onclick="saveSquad()">SAVE SQUAD</button>
+<button onclick="savePlaying11()">SAVE PLAYING11</button>
 </div>
 
 <script>
@@ -54,106 +55,58 @@ teamSelect.innerHTML=html;
 }
 
 function loadPlayers(){
-  const teamId = teamSelect.value;
-  if(!teamId){ 
-    players.innerHTML=""; 
-    return; 
-  }
+const teamId=teamSelect.value;
+if(!teamId){ players.innerHTML=""; return; }
 
-  fetch(`${API}?action=getPlayers&teamId=${teamId}`)
-  .then(r=>r.json())
-  .then(d=>{
-    players.innerHTML="";
-
-    d.players.forEach(p=>{
-      players.innerHTML += `
-      <div class="player">
-        <input type="checkbox" class="play" value="${p.playerId}">
-        <input type="radio" name="captain" value="${p.playerId}">
-        <input type="radio" name="keeper" value="${p.playerId}">
-        <input type="checkbox" class="sub" value="${p.playerId}">
-        <span>${p.playerName}</span>
-      </div>`;
-    });
-
-    // ✅ AFTER rendering attach sync
-    document.querySelectorAll(".play").forEach(playBox=>{
-      playBox.addEventListener("change", ()=>{
-        const pid = playBox.value;
-        const subBox = document.querySelector(`.sub[value="${pid}"]`);
-        if(playBox.checked) subBox.checked = false;
-        updateCount();
-      });
-    });
-  });
+fetch(`${API}?action=getPlayers&teamId=${teamId}`)
+.then(r=>r.json())
+.then(d=>{
+players.innerHTML="";
+d.players.forEach(p=>{
+players.innerHTML+=`
+<div class="player">
+<input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
+<input type="radio" name="captain" value="${p.playerId}">
+<input type="radio" name="keeper" value="${p.playerId}">
+<span>${p.playerName}</span>
+</div>`;
+});
+updateCount();
+});
 }
 
 function updateCount(){
 const n=document.querySelectorAll(".play:checked").length;
-count.innerText=`${n} selected`;
+count.innerText=`${n} / 11 selected`;
 }
 
-function syncSub(cb){
-const playBox = document.querySelector(`.play[value="${cb.value}"]`);
-if(!playBox.checked){
-cb.checked=false;
-alert("Substitute must be from selected players");
-}
-}
-
-function saveSquad(){
+function savePlaying11(){
 const teamId=teamSelect.value;
-const playing=[...document.querySelectorAll(".play:checked")];
-const subs=[...document.querySelectorAll(".sub:checked")];
+const plays=[...document.querySelectorAll(".play:checked")];
 
-if(playing.length < 11) return alert("Minimum 11 players required");
-if(playing.length > 14) return alert("Maximum 14 allowed");
-
-const extra = playing.length - 11;
-
-if(extra === 0 && subs.length === 0){
-if(!confirm("No substitutes selected. Continue?")) return;
-}
-
-if(extra > 0 && subs.length !== extra){
-return alert(`Select ${extra} Substitute players`);
-}
+if(plays.length!==11) return alert("Select exactly 11 players");
 
 const captain=document.querySelector("input[name=captain]:checked")?.value||"";
 const keeper=document.querySelector("input[name=keeper]:checked")?.value||"";
 
-if(!playing.find(p=>p.value===captain)) return alert("Captain must be from playing");
-if(!playing.find(p=>p.value===keeper)) return alert("Keeper must be from playing");
+if(!captain) return alert("Select Captain");
+if(!keeper) return alert("Select Wicket Keeper");
 
-const data=[];
+if(!plays.find(p=>p.value===captain)) return alert("Captain must be from Playing11");
+if(!plays.find(p=>p.value===keeper)) return alert("Keeper must be from Playing11");
 
-playing.forEach(p=>{
-data.push({
+const data=plays.map(p=>({
 playerId:p.value,
 role:"PLAYING",
 isCaptain:p.value===captain,
 isKeeper:p.value===keeper,
 isPlaying:true,
 isSubstitute:false
-});
-});
-
-subs.forEach(p => {
-  if (!playing.find(pl => pl.value === p.value)) {
-    data.push({
-      playerId: p.value,
-      role: "SUBSTITUTE",
-      isCaptain: false,
-      isKeeper: false,
-      isPlaying: false,
-      isSubstitute: true
-    });
-  }
-});
+}));
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
 .then(r=>r.json())
-.then(()=>alert("Squad Saved ✅"));
+.then(()=>alert("Playing11 Saved ✅"));
 }
 
 loadTeams();
