@@ -2,82 +2,146 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Playing11</title>
+<title>Playing 11</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{font-family:Arial;background:#f2f4f8;padding:20px}
 .box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
-.player{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #eee;font-size:14px}
-.head{width:40px;text-align:center;font-size:12px;color:#555}
-button,select{width:100%;padding:12px;margin-top:10px;font-size:16px}
+select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
+.player{display:flex;align-items:center;gap:8px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}
+.head{font-size:12px;color:#555;width:50px;text-align:center}
+.count{font-size:13px;color:#777;margin:6px 0;text-align:right}
+button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 </style>
 </head>
 <body>
 
 <div class="box">
-<h3>Playing11 + Subs</h3>
-<select id="team"></select>
+<h2>Select Playing 11 + Subs</h2>
 
-<div style="display:flex;margin-top:8px">
-<div class="head">P</div><div class="head">C</div><div class="head">K</div><div class="head">S</div><div style="flex:1"></div>
+<label><b>Select Team</b></label>
+<select id="teamSelect" onchange="loadPlayers()"></select>
+
+<div class="count" id="count">0 selected</div>
+
+<div style="display:flex;font-size:12px;color:#555;margin-top:6px">
+<div class="head">PLAY</div>
+<div class="head">CAP</div>
+<div class="head">WK</div>
+<div class="head">SUB</div>
+<div style="flex:1"></div>
 </div>
 
 <div id="players"></div>
-<button onclick="save()">SAVE</button>
+
+<button onclick="saveSquad()">SAVE SQUAD</button>
 </div>
 
 <script>
 const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
-const MATCH="MATCH_1768624533546";
+const MATCH_ID="MATCH_1768624533546";
 
 function loadTeams(){
-fetch(API+"?action=getTeams")
+fetch(`${API}?action=getTeams`)
 .then(r=>r.json())
 .then(d=>{
-team.innerHTML="<option value=''>Select Team</option>";
+let html=`<option value="">-- Select Team --</option>`;
 d.teams.forEach(t=>{
-team.innerHTML+=`<option value="${t.teamId}">${t.teamName}</option>`;
+html+=`<option value="${t.teamId}">${t.teamName}</option>`;
 });
+teamSelect.innerHTML=html;
 });
 }
 
-team.onchange=()=>{
-fetch(API+`?action=getPlayers&teamId=${team.value}`)
+function loadPlayers(){
+const teamId=teamSelect.value;
+if(!teamId){ players.innerHTML=""; return; }
+
+fetch(`${API}?action=getPlayers&teamId=${teamId}`)
 .then(r=>r.json())
 .then(d=>{
 players.innerHTML="";
 d.players.forEach(p=>{
 players.innerHTML+=`
 <div class="player">
-<input type="checkbox" class="play" value="${p.playerId}">
-<input type="radio" name="cap" value="${p.playerId}">
-<input type="radio" name="wk" value="${p.playerId}">
+<input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
+<input type="radio" name="captain" value="${p.playerId}">
+<input type="radio" name="keeper" value="${p.playerId}">
 <input type="checkbox" class="sub" value="${p.playerId}">
 <span>${p.playerName}</span>
 </div>`;
 });
+updateCount();
 });
-};
+}
 
-function save(){
-const play=[...document.querySelectorAll(".play:checked")];
-const sub=[...document.querySelectorAll(".sub:checked")];
-const cap=document.querySelector("input[name=cap]:checked")?.value;
-const wk=document.querySelector("input[name=wk]:checked")?.value;
+function updateCount(){
+count.innerText=document.querySelectorAll(".play:checked").length+" selected";
+}
 
-if(play.length<11) return alert("Minimum 11 players");
-if(play.length>14) return alert("Max 14 allowed");
+function saveSquad(){
+const teamId=teamSelect.value;
+const playing=[...document.querySelectorAll(".play:checked")].map(p=>p.value);
+const subs=[...document.querySelectorAll(".sub:checked")].map(p=>p.value);
 
-const extra=play.length-11;
-if(extra>0 && sub.length!==extra) return alert("Mark extra players as SUB");
+if(playing.length<11) return alert("Minimum 11 required");
+if(playing.length>14) return alert("Max 14 allowed");
+
+const extra=playing.length-11;
+
+if(extra===0 && subs.length===0){
+if(!confirm("No substitutes. Continue?")) return;
+}
+
+if(extra>0){
+const subValid=subs.filter(s=>playing.includes(s));
+if(subValid.length!==extra){
+return alert(`Select exactly ${extra} subs from playing players`);
+}
+}
+
+const captain=document.querySelector("input[name=captain]:checked")?.value;
+const keeper=document.querySelector("input[name=keeper]:checked")?.value;
+
+if(!playing.includes(captain)) return alert("Captain must be playing");
+if(!playing.includes(keeper)) return alert("Keeper must be playing");
+
+const uniquePlayers=new Set();
 
 const data=[];
-play.forEach(p=>data.push({playerId:p.value,role:"PLAYING",isCaptain:p.value===cap,isKeeper:p.value===wk,isPlaying:true,isSubstitute:false}));
-sub.forEach(p=>data.push({playerId:p.value,role:"SUBSTITUTE",isPlaying:false,isSubstitute:true}));
 
-fetch(API+`?action=savePlaying11&matchId=${MATCH}&teamId=${team.value}&players=${encodeURIComponent(JSON.stringify(data))}`)
+playing.forEach(pid=>{
+if(uniquePlayers.has(pid)) return;
+uniquePlayers.add(pid);
+data.push({
+playerId:pid,
+role:"PLAYING",
+isCaptain:pid===captain,
+isKeeper:pid===keeper,
+isPlaying:true,
+isSubstitute:false
+});
+});
+
+subs.forEach(pid=>{
+if(uniquePlayers.has(pid)) return;
+uniquePlayers.add(pid);
+data.push({
+playerId:pid,
+role:"SUBSTITUTE",
+isCaptain:false,
+isKeeper:false,
+isPlaying:false,
+isSubstitute:true
+});
+});
+
+fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
 .then(r=>r.json())
-.then(d=>alert("Saved "+d.count));
+.then(res=>{
+console.log(res);
+alert("Saved Clean ✅");
+});
 }
 
 loadTeams();
