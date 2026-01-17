@@ -125,15 +125,17 @@ isSubstitute:false
 });
 });
 
-subs.forEach(p=>{
-data.push({
-playerId:p.value,
-role:"SUBSTITUTE",
-isCaptain:false,
-isKeeper:false,
-isPlaying:false,
-isSubstitute:true
-});
+subs.forEach(p => {
+  if (!playing.find(pl => pl.value === p.value)) {
+    data.push({
+      playerId: p.value,
+      role: "SUBSTITUTE",
+      isCaptain: false,
+      isKeeper: false,
+      isPlaying: false,
+      isSubstitute: true
+    });
+  }
 });
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
