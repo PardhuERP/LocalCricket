@@ -22,7 +22,7 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 <h2>Select Playing 11</h2>
 
 <label><b>Select Team</b></label>
-<select id="teamSelect" onchange="loadPlayers()"></select>
+<select id="teamSelect"></select>
 
 <div class="count" id="count">0 / 11 selected</div>
 
@@ -42,6 +42,12 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 const MATCH_ID="MATCH_1768624533546";
 
+const teamSelect = document.getElementById("teamSelect");
+const playersDiv = document.getElementById("players");
+const countDiv = document.getElementById("count");
+
+teamSelect.addEventListener("change", loadPlayers);
+
 function loadTeams(){
 fetch(`${API}?action=getTeams`)
 .then(r=>r.json())
@@ -56,28 +62,33 @@ teamSelect.innerHTML=html;
 
 function loadPlayers(){
 const teamId=teamSelect.value;
-if(!teamId){ players.innerHTML=""; return; }
+playersDiv.innerHTML="";
+if(!teamId) return;
 
 fetch(`${API}?action=getPlayers&teamId=${teamId}`)
 .then(r=>r.json())
 .then(d=>{
-players.innerHTML="";
 d.players.forEach(p=>{
-players.innerHTML+=`
+playersDiv.innerHTML+=`
 <div class="player">
-<input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
+<input type="checkbox" class="play" value="${p.playerId}">
 <input type="radio" name="captain" value="${p.playerId}">
 <input type="radio" name="keeper" value="${p.playerId}">
 <span>${p.playerName}</span>
 </div>`;
 });
+
+document.querySelectorAll(".play").forEach(cb=>{
+cb.addEventListener("change", updateCount);
+});
+
 updateCount();
 });
 }
 
 function updateCount(){
 const n=document.querySelectorAll(".play:checked").length;
-count.innerText=`${n} / 11 selected`;
+countDiv.innerText=`${n} / 11 selected`;
 }
 
 function savePlaying11(){
@@ -106,7 +117,10 @@ isSubstitute:false
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
 .then(r=>r.json())
-.then(()=>alert("Playing11 Saved ✅"));
+.then(res=>{
+console.log(res);
+alert("Playing11 Saved ✅");
+});
 }
 
 loadTeams();
