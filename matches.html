@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Matches</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:Arial;background:#f2f4f8;padding:20px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:520px;margin:auto}
+.match{padding:12px;border-bottom:1px solid #ddd;font-size:14px}
+button{padding:6px 12px;border:none;border-radius:6px;background:#0a7cff;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>Matches</h2>
+<div id="matchList">Loading...</div>
+</div>
+
+<script>
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+const TEAM_ID="TEAM_1767871627809"; // change later dynamic
+
+function loadMatches(){
+fetch(API+`?action=getMatches&teamId=${TEAM_ID}`)
+.then(r=>r.json())
+.then(d=>{
+const box=document.getElementById("matchList");
+box.innerHTML="";
+if(!d.matches || !d.matches.length){
+box.innerHTML="No Matches";
+return;
+}
+
+d.matches.forEach(m=>{
+box.innerHTML+=`
+<div class="match">
+<b>${m.teamAId}</b> vs <b>${m.teamBId}</b><br>
+Overs: ${m.overs}<br>
+📍 ${m.venue}<br>
+📅 ${new Date(m.matchDate).toLocaleString()}<br><br>
+<button onclick="startToss('${m.matchId}')">Open Toss</button>
+</div>`;
+});
+});
+}
+
+function startToss(matchId){
+window.location.href=`toss.html?matchId=${matchId}`;
+}
+
+loadMatches();
+</script>
+</body>
+</html>
