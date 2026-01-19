@@ -5,6 +5,10 @@ let matches=[];
 let actionInProgress=false;
 
 const el=id=>document.getElementById(id);
+const matchSelect = document.getElementById("matchSelect");
+const strikerSelect = document.getElementById("strikerSelect");
+const nonStrikerSelect = document.getElementById("nonStrikerSelect");
+const bowlerSelect = document.getElementById("bowlerSelect");
 
 /* LOAD MATCH LIST */
 function loadMatches(){
