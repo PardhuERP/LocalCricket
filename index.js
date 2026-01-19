@@ -111,39 +111,54 @@ function handleStateUI(d){
 }
 
 /* POPUP */
-function openPopup(mode,title){
- popupMode=mode;
- popupActive=true;
- el("popupTitle").innerText=title;
+async function openPopup(mode, title) {
+  popupMode = mode;
+  popupActive = true;
 
- el("popupSelect").innerHTML=`
- <option value="">-- Select --</option>
- <option value="PLAYER_1">PLAYER_1</option>
- <option value="PLAYER_2">PLAYER_2</option>
- <option value="PLAYER_3">PLAYER_3</option>`;
+  el("popupTitle").innerText = title;
+  el("popup").classList.remove("hidden");
 
- el("popup").classList.remove("hidden");
+  // 🔹 Load real players based on mode
+  const live = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`).then(r => r.json());
+  if (live.status !== "ok") return;
+
+  let teamId = mode === "BATSMAN" ? live.battingTeamId : live.bowlingTeamId;
+
+  const squad = await fetch(`${API}?action=getPlaying11&matchId=${MATCH_ID}&teamId=${teamId}`).then(r => r.json());
+
+  let html = `<option value="">-- Select --</option>`;
+
+  squad.players.forEach(p => {
+
+    // Skip current striker/non-striker when choosing batsman
+    if (mode === "BATSMAN" && (p.playerId === live.strikerId || p.playerId === live.nonStrikerId)) return;
+
+    html += `<option value="${p.playerId}">${p.playerName}</option>`;
+  });
+
+  el("popupSelect").innerHTML = html;
 }
 
-function closePopup(){
- popupActive=false;
- popupMode=null;
- el("popup").classList.add("hidden");
+function closePopup() {
+  popupActive = false;
+  popupMode = null;
+  el("popup").classList.add("hidden");
 }
 
-function confirmPopup(){
- const v=el("popupSelect").value;
- if(!v) return alert("Select player");
+async function confirmPopup() {
+  const v = el("popupSelect").value;
+  if (!v) return alert("Select player");
 
- if(popupMode==="BATSMAN"){
- fetch(`${API}?action=setNewBatsman&matchId=${MATCH_ID}&newBatsmanId=${v}`);
- }
- if(popupMode==="BOWLER"){
- fetch(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`);
- }
+  if (popupMode === "BATSMAN") {
+    await fetch(`${API}?action=setNewBatsman&matchId=${MATCH_ID}&newBatsmanId=${v}`);
+  }
 
- closePopup();
- setTimeout(loadLive,400);
+  if (popupMode === "BOWLER") {
+    await fetch(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${v}`);
+  }
+
+  closePopup();
+  setTimeout(loadLive, 500);
 }
 
 /* ACTIONS */
