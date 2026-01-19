@@ -11,19 +11,17 @@ body{margin:0;font-family:Arial;background:#f2f4f8}
 .team-name{font-size:18px;font-weight:bold}
 .team-score{font-size:34px;font-weight:bold;margin-top:4px}
 .meta-row{display:flex;gap:20px;font-size:14px;color:#555;margin:8px 0 14px}
-.divider{height:1px;background:#e0e0e0;margin:16px 0}
+.table{margin-top:12px}
+.table-head,.table-row{display:grid;grid-template-columns:2fr repeat(5,1fr);font-size:14px;padding:6px 0}
+.table-head{color:#777;border-bottom:1px solid #ddd}
+.star{color:#0a7cff}
 .state{text-align:center;padding:8px;border-radius:8px;font-weight:bold;background:#e3f2fd;margin-top:14px}
 .row-btn{display:flex;gap:10px;margin-bottom:10px}
 button{flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;background:#0a7cff;color:#fff}
 .extra{background:#ff9800}
 .wicket{background:#e53935}
 .undo{background:#444}
-select{
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
-  font-size:13px;
-}
+select{width:100%;padding:10px;margin:6px 0}
 </style>
 </head>
 
@@ -34,32 +32,20 @@ select{
 <div class="team-name">Live Match</div>
 <div class="team-score" id="teamScore">0-0 (0.0)</div>
 
-<div class="meta-row">
-<span id="crr">CRR 0.00</span>
-<span id="pship">P'SHIP 0(0)</span>
-</div>
-
 <label><b>Select Match</b></label>
 <select id="matchSelect"></select>
-
-<!-- ✅ Opening Setup -->
-<div id="openingBox" style="margin:12px 0">
-<label style="font-size:13px;color:#555"><b>Opening Setup</b></label>
-
-<div style="display:flex;gap:6px;margin-top:6px">
-<select id="strikerSelect" style="flex:1"></select>
-<select id="nonStrikerSelect" style="flex:1"></select>
-<select id="bowlerSelect" style="flex:1"></select>
-</div>
-
-<button onclick="setOpening()" style="margin-top:8px">SET OPENERS</button>
-</div>
-
 <button onclick="loadSelectedMatch()">LOAD MATCH</button>
+
+<hr>
+
+<h3>Opening Setup</h3>
+<select id="strikerSelect"></select>
+<select id="nonStrikerSelect"></select>
+<select id="bowlerSelect"></select>
+<button onclick="setOpening()">SET OPENERS</button>
 
 <div class="state" id="state">WAITING...</div>
 
-<!-- Runs -->
 <div class="row-btn">
 <button onclick="addRun(0)">0</button>
 <button onclick="addRun(1)">1</button>
@@ -72,12 +58,11 @@ select{
 <button onclick="addRun(6)">6</button>
 </div>
 
-<!-- Extras & Wickets -->
 <div class="row-btn">
 <button class="extra" onclick="addExtra('WD')">WD</button>
 <button class="extra" onclick="addExtra('NB')">NB</button>
 <button class="wicket" onclick="addWicket()">W</button>
-<button class="wicket" onclick="openRunOutPopup()">RO</button>
+<button class="wicket" onclick="addRunOut()">RO</button>
 <button class="undo" onclick="undoBall()">UNDO</button>
 </div>
 
