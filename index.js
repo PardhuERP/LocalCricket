@@ -34,22 +34,57 @@ const b=d.stats[n]||{runs:0,balls:0,fours:0,sixes:0};
 const sr1=a.balls?((a.runs/a.balls)*100).toFixed(2):"0.00";
 const sr2=b.balls?((b.runs/b.balls)*100).toFixed(2):"0.00";
 
+// 👇 Fetch Names for striker & non-striker
+Promise.all([
+fetch(`${API}?action=getPlayerName&playerId=${s}`).then(r=>r.json()),
+fetch(`${API}?action=getPlayerName&playerId=${n}`).then(r=>r.json())
+]).then(([sn,nn])=>{
+
 el("batRows").innerHTML=`
-<div class="row"><span class="name">*</span><span>${a.runs}</span><span>${a.balls}</span><span>${a.fours}</span><span>${a.sixes}</span><span>${sr1}</span></div>
-<div class="row"><span>${n}</span><span>${b.runs}</span><span>${b.balls}</span><span>${b.fours}</span><span>${b.sixes}</span><span>${sr2}</span></div>`;
+<div class="row">
+<span class="name star">*</span><span>${sn.name}</span>
+<span>${a.runs}</span><span>${a.balls}</span>
+<span>${a.fours}</span><span>${a.sixes}</span><span>${sr1}</span>
+</div>
+
+<div class="row">
+<span>${nn.name}</span>
+<span>${b.runs}</span><span>${b.balls}</span>
+<span>${b.fours}</span><span>${b.sixes}</span><span>${sr2}</span>
+</div>`;
+});
 });
 }
 
 /* BOWLER */
 function loadBowler(id){
-fetch(`${API}?action=getPlayerMatchStats&matchId=${MATCH_ID}`)
-.then(r=>r.json())
-.then(d=>{
+
+if(!id){
+  el("bowlRows").innerHTML="";
+  return;
+}
+
+Promise.all([
+fetch(`${API}?action=getPlayerMatchStats&matchId=${MATCH_ID}`).then(r=>r.json()),
+fetch(`${API}?action=getPlayerName&playerId=${id}`).then(r=>r.json())
+])
+.then(([d,n])=>{
+
 const b=d.stats[id]||{overs:0,balls:0,maidens:0,runsGiven:0,wickets:0};
+
+const totalOvers = `${b.overs}.${b.balls||0}`;
 const eco=b.overs?(b.runsGiven/b.overs).toFixed(2):"0.00";
 
 el("bowlRows").innerHTML=`
-<div class="row"><span class="name">*</span><span>${b.overs}.${b.balls||0}</span><span>${b.maidens}</span><span>${b.runsGiven}</span><span>${b.wickets}</span><span>${eco}</span></div>`;
+<div class="row">
+  <span class="name star">*</span>
+  <span>${n.name}</span>
+  <span>${totalOvers}</span>
+  <span>${b.maidens}</span>
+  <span>${b.runsGiven}</span>
+  <span>${b.wickets}</span>
+  <span>${eco}</span>
+</div>`;
 });
 }
 
