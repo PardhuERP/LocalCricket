@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Set Opening Players</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f2f4f8;padding:20px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
+select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
+button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>Opening Players</h2>
+
+<label>Match</label>
+<select id="match"></select>
+
+<label>Striker</label>
+<select id="striker"></select>
+
+<label>Non-Striker</label>
+<select id="nonStriker"></select>
+
+<label>Bowler</label>
+<select id="bowler"></select>
+
+<button onclick="save()">SET OPENERS</button>
+</div>
+
+<script>
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+
+let matches=[];
+let players=[];
+
+fetch(`${API}?action=getMatches`)
+.then(r=>r.json())
+.then(d=>{
+matches=d.matches||[];
+let html='<option value="">-- Select Match --</option>';
+matches.forEach(m=>{
+html+=`<option value="${m.matchId}">${m.matchId}</option>`;
+});
+match.innerHTML=html;
+});
+
+match.onchange=()=>{
+const m=matches.find(x=>x.matchId===match.value);
+if(!m)return;
+
+Promise.all([
+fetch(`${API}?action=getPlayers&teamId=${m.teamAId}`).then(r=>r.json()),
+fetch(`${API}?action=getPlayers&teamId=${m.teamBId}`).then(r=>r.json())
+]).then(([bat,bowl])=>{
+const batPlayers=bat.players||[];
+const bowlPlayers=bowl.players||[];
+
+striker.innerHTML=nonStriker.innerHTML=
+'<option value="">-- Select Batsman --</option>'+
+batPlayers.map(p=>`<option value="${p.playerId}">${p.playerName}</option>`).join("");
+
+bowler.innerHTML=
+'<option value="">-- Select Bowler --</option>'+
+bowlPlayers.map(p=>`<option value="${p.playerId}">${p.playerName}</option>`).join("");
+});
+};
+
+function save(){
+if(!match.value||!striker.value||!nonStriker.value||!bowler.value){
+alert("Select all players");return;
+}
+
+fetch(`${API}?action=setOpeningPlayers&matchId=${match.value}&strikerId=${striker.value}&nonStrikerId=${nonStriker.value}&bowlerId=${bowler.value}`)
+.then(r=>r.json())
+.then(d=>alert("Opening players set ✅"));
+}
+</script>
+</body>
+</html>
