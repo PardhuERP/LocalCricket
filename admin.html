@@ -71,11 +71,16 @@ if(!MATCH_ID)return alert("Select match");
 fetch(`${API}?action=getMatch&matchId=${MATCH_ID}`)
 .then(r=>r.json())
 .then(m=>{
-matchInfo.innerHTML=`
-<b>${m.teamAId}</b> vs <b>${m.teamBId}</b><br>
-Overs: ${m.overs}<br>
-Venue: ${m.venue}<br>
-Status: ${m.matchStatus}`;
+  if(m.status!=="ok"){
+    matchInfo.innerHTML="Match data not found";
+    return;
+  }
+
+  matchInfo.innerHTML=`
+  <b>${m.teamAId}</b> vs <b>${m.teamBId}</b><br>
+  Overs: ${m.overs}<br>
+  Venue: ${m.venue}<br>
+  Status: ${m.matchStatus}`;
 });
 }
 
