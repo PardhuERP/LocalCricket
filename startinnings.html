@@ -4,65 +4,105 @@
 <meta charset="UTF-8">
 <title>Start Innings</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body{font-family:Arial;background:#f2f4f8;padding:20px}
-.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
-select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
-button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
-.info{font-size:14px;color:#555;margin-top:6px}
+body{
+  font-family: Arial;
+  background:#f2f4f8;
+  padding:20px
+}
+.box{
+  background:#fff;
+  padding:16px;
+  border-radius:12px;
+  max-width:420px;
+  margin:auto
+}
+select,button{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  font-size:16px
+}
+button{
+  background:#0a7cff;
+  color:#fff;
+  border:none;
+  border-radius:8px
+}
+#teams{
+  font-size:14px;
+  margin:10px 0;
+  color:#444
+}
 </style>
 </head>
+
 <body>
 
 <div class="box">
-<h2>Start First Innings</h2>
+  <h2>Start 1st Innings</h2>
 
-<select id="matchSelect" onchange="showMatch()">
-<option value="">-- Select Match --</option>
-</select>
+  <select id="matchSelect" onchange="showMatch()">
+    <option>Loading matches...</option>
+  </select>
 
-<div class="info" id="teams"></div>
+  <div id="teams"></div>
 
-<button onclick="startInnings()">START INNINGS</button>
+  <button onclick="startInnings()">START INNINGS</button>
 </div>
 
 <script>
 const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+const matchSelect=document.getElementById("matchSelect");
+const teams=document.getElementById("teams");
+
 let matches=[];
 
+// Load matches
 fetch(`${API}?action=getMatches`)
 .then(r=>r.json())
 .then(d=>{
   matches=d.matches||[];
   let html='<option value="">-- Select Match --</option>';
   matches.forEach(m=>{
-    html+=`<option value="${m.matchId}">${m.matchId} | ${m.teamAId} vs ${m.teamBId}</option>`;
+    html+=`<option value="${m.matchId}">
+      ${m.matchId} | ${m.teamAId} vs ${m.teamBId}
+    </option>`;
   });
   matchSelect.innerHTML=html;
 });
 
+// Show teams
 function showMatch(){
-const id=matchSelect.value;
-const m=matches.find(x=>x.matchId===id);
-if(!m){teams.innerHTML="";return;}
-teams.innerHTML=`${m.teamAId} vs ${m.teamBId}<br>Overs: ${m.overs}`;
+  const id=matchSelect.value;
+  const m=matches.find(x=>x.matchId===id);
+  if(!m){ teams.innerHTML=""; return; }
+
+  teams.innerHTML=`
+    <b>${m.teamAId}</b> vs <b>${m.teamBId}</b><br>
+    Overs: ${m.overs}<br>
+    Venue: ${m.venue}
+  `;
 }
 
+// Start innings
 function startInnings(){
-const id=matchSelect.value;
-if(!id)return alert("Select match");
+  const id=matchSelect.value;
+  if(!id) return alert("Select match");
 
-fetch(`${API}?action=startFirstInnings&matchId=${id}`)
-.then(r=>r.json())
-.then(d=>{
-  if(d.status==="ok"){
-    alert("1st Innings Started ✅");
-  }else{
-    alert("Error: "+d.message);
-  }
-});
+  fetch(`${API}?action=startFirstInnings&matchId=${id}`)
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.status==="ok"){
+      alert("1st Innings Started ✅");
+    }else{
+      alert("Error: "+d.message);
+    }
+  });
 }
 </script>
+
 </body>
 </html>
