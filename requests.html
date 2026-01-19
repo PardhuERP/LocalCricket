@@ -31,7 +31,13 @@ fetch(`${API}?action=getMatchRequests&teamId=${TEAM_ID}&type=INCOMING`)
 .then(d=>{
 const box=document.getElementById("list");
 box.innerHTML="";
-if(!d.incoming.length){
+
+if(!d || d.status!=="ok"){
+box.innerHTML="API Error";
+return;
+}
+
+if(!d.incoming || d.incoming.length===0){
 box.innerHTML="No pending requests";
 return;
 }
