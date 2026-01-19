@@ -11,6 +11,7 @@ body{font-family:Arial;background:#f2f4f8;padding:20px}
 select,input,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
 button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 .req{padding:10px;border-bottom:1px solid #ddd;font-size:14px}
+.status{font-size:12px;color:#777}
 </style>
 </head>
 <body>
@@ -48,43 +49,67 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 <script>
 const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+const fromSel=document.getElementById("fromTeam");
+const toSel=document.getElementById("toTeam");
+const sentList=document.getElementById("sentList");
+
 function loadTeams(){
 fetch(API+"?action=getTeams")
 .then(r=>r.json())
 .then(d=>{
-if(d.status!=="ok") return;
-const f=document.getElementById("fromTeam");
-const t=document.getElementById("toTeam");
-f.innerHTML='<option value="">Select</option>';
-t.innerHTML='<option value="">Select</option>';
+fromSel.innerHTML='<option value="">Select</option>';
+toSel.innerHTML='<option value="">Select</option>';
 d.teams.forEach(team=>{
-f.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;
-t.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;
+fromSel.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;
+toSel.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;
+});
+});
+}
+
+function loadSent(){
+fetch(API+"?action=getMatchRequests")
+.then(r=>r.json())
+.then(d=>{
+sentList.innerHTML="";
+d.outgoing.forEach(r=>{
+sentList.innerHTML+=`
+<div class="req">
+<b>${r.fromTeamId}</b> ➝ ${r.toTeamId}<br>
+Overs: ${r.overs} | ${r.matchType}<br>
+Venue: ${r.venue}<br>
+Date: ${new Date(r.matchDate).toLocaleString()}<br>
+<span class="status">Status: ${r.status}</span>
+</div>`;
 });
 });
 }
 
 function sendRequest(){
-const from=document.getElementById("fromTeam").value;
-const to=document.getElementById("toTeam").value;
+const from=fromSel.value;
+const to=toSel.value;
 const overs=document.getElementById("overs").value;
 const venue=document.getElementById("venue").value;
 const date=document.getElementById("matchDate").value;
 const type=document.getElementById("matchType").value;
 
+if(from===to){alert("Both teams cannot be same");return;}
 if(!from||!to||!overs||!venue||!date){
 alert("Fill all fields");return;
 }
 
 const url=API+
-`?action=createMatchRequest&fromTeamId=${from}&toTeamId=${to}&overs=${overs}&matchType=${type}&venue=${encodeURIComponent(venue)}&matchDate=${date}`;
+`?action=createMatchRequest&fromTeamId=${from}&toTeamId=${to}&overs=${overs}&matchType=${type}&venue=${encodeURIComponent(venue)}&matchDate=${encodeURIComponent(date)}`;
 
-fetch(url).then(r=>r.json()).then(d=>{
-alert("Request Sent");
+fetch(url)
+.then(r=>r.json())
+.then(()=>{
+alert("Request Sent ✅");
+loadSent();
 });
 }
 
 loadTeams();
+loadSent();
 </script>
 </body>
 </html>
