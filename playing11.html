@@ -79,29 +79,31 @@ count.innerText=`${n} selected`;
 }
 
 function savePlaying11(){
-const teamId=teamSelect.value;
-const playing=[...document.querySelectorAll(".play:checked")].map(p=>p.value);
+const teamId = teamSelect.value;
+const playing = [...document.querySelectorAll(".play:checked")].map(p=>p.value);
 
-if(playing.length!==11) return alert("Select exactly 11 players");
+if(playing.length !== 11) return alert("Select exactly 11 players");
 
-const captain=document.querySelector("input[name=captain]:checked")?.value||"";
-const keeper=document.querySelector("input[name=keeper]:checked")?.value||"";
+const captain = document.querySelector("input[name=captain]:checked")?.value || "";
+const keeper  = document.querySelector("input[name=keeper]:checked")?.value || "";
 
-if(!playing.includes(captain)) return alert("Select captain from playing 11");
-if(!playing.includes(keeper)) return alert("Select keeper from playing 11");
+if(!playing.includes(captain)) return alert("Captain must be from playing 11");
+if(!playing.includes(keeper))  return alert("Keeper must be from playing 11");
 
-const data=playing.map(pid=>({
-playerId:pid,
-role:"PLAYING",
-isCaptain:pid===captain,
-isKeeper:pid===keeper,
-isPlaying:true,
-isSubstitute:false
-}));
+// ✅ send ONLY ids to GAS
+const url = `${API}?action=savePlaying11`
++ `&matchId=${MATCH_ID}`
++ `&teamId=${teamId}`
++ `&captainId=${captain}`
++ `&keeperId=${keeper}`
++ `&players=${encodeURIComponent(JSON.stringify(playing))}`;
 
-fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(data))}`)
+fetch(url)
 .then(r=>r.json())
-.then(res=>alert("Playing11 Saved ✅"));
+.then(res=>{
+  if(res.status==="ok") alert("Playing11 Saved ✅");
+  else alert(res.message);
+});
 }
 
 loadTeams();
