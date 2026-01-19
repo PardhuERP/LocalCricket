@@ -2,6 +2,7 @@ const MATCH_ID = "MATCH_1767874129183";
 const API =
   "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 
+let MATCH_ID = "";
 /* =========================
    GLOBAL STATE
 ========================= */
@@ -16,6 +17,29 @@ let wicketOverStep = null;
    DOM HELPER
 ========================= */
 const el = id => document.getElementById(id);
+
+
+/* =========================
+   LOAD MATCHES
+========================= */
+function loadMatches(){
+fetch(`${API}?action=getMatches`)
+.then(r=>r.json())
+.then(d=>{
+let html='<option value="">-- Select Match --</option>';
+d.matches.forEach(m=>{
+html+=`<option value="${m.matchId}">${m.matchId} | ${m.teamAId} vs ${m.teamBId}</option>`;
+});
+matchSelect.innerHTML=html;
+});
+}
+
+function loadSelectedMatch(){
+MATCH_ID = matchSelect.value;
+if(!MATCH_ID) return alert("Select match");
+
+loadLiveScore();   // existing function
+}
 
 /* =========================
    LOAD LIVE SCORE
@@ -289,6 +313,7 @@ function undoBall() {
    INIT
 ========================= */
 window.onload = () => {
+  loadMatches();
   loadLiveScore();
   setInterval(loadLiveScore, 2000);
 };
