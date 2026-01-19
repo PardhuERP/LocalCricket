@@ -74,6 +74,7 @@ fetch(`${API}?action=getPlayers&teamId=${teamId}`)
       <span>${p.playerName}</span>
     </div>`;
   });
+}
 
   playersDiv.innerHTML = html;  // ✅ inject once only
   updateCount();
