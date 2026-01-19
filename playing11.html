@@ -9,7 +9,7 @@ body{font-family:Arial;background:#f2f4f8;padding:20px}
 .box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
 select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
 .player{display:flex;align-items:center;gap:10px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}
-.head{font-size:12px;color:#555;width:50px;text-align:center}
+.head{font-size:12px;color:#555;width:60px;text-align:center}
 .count{font-size:13px;color:#777;margin:6px 0;text-align:right}
 button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 </style>
@@ -40,6 +40,10 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
 const MATCH_ID="MATCH_1768624533546";
 
+const teamSelect=document.getElementById("teamSelect");
+const playersDiv=document.getElementById("players");
+const count=document.getElementById("count");
+
 function loadTeams(){
 fetch(`${API}?action=getTeams`)
 .then(r=>r.json())
@@ -54,14 +58,14 @@ teamSelect.innerHTML=html;
 
 function loadPlayers(){
 const teamId=teamSelect.value;
-players.innerHTML="";
-if(!teamId) return;
+playersDiv.innerHTML="";
+if(!teamId)return;
 
 fetch(`${API}?action=getPlayers&teamId=${teamId}`)
 .then(r=>r.json())
 .then(d=>{
 d.players.forEach(p=>{
-players.innerHTML+=`
+playersDiv.innerHTML+=`
 <div class="player">
 <input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
 <input type="radio" name="captain" value="${p.playerId}">
@@ -77,53 +81,29 @@ function updateCount(){
 const n=document.querySelectorAll(".play:checked").length;
 count.innerText=`${n} selected`;
 }
-/* =========================
-   SAVE PLAYING11
-========================= */
-function savePlaying11() {
 
-  const teamId = teamSelect.value;
-  const playing = [...document.querySelectorAll(".play:checked")]
-    .map(p => p.value);
+function savePlaying11(){
+const teamId=teamSelect.value;
+const selected=[...document.querySelectorAll(".play:checked")].map(p=>p.value);
 
-  if (playing.length !== 11) {
-    alert("Select exactly 11 players");
-    return;
-  }
+if(selected.length!==11) return alert("Select exactly 11 players");
 
-  const captain =
-    document.querySelector("input[name=captain]:checked")?.value || "";
-  const keeper =
-    document.querySelector("input[name=keeper]:checked")?.value || "";
+const captain=document.querySelector("input[name=captain]:checked")?.value||"";
+const keeper=document.querySelector("input[name=keeper]:checked")?.value||"";
 
-  if (!playing.includes(captain)) {
-    alert("Captain must be from Playing 11");
-    return;
-  }
+if(!selected.includes(captain)) return alert("Captain must be from playing11");
+if(!selected.includes(keeper)) return alert("Keeper must be from playing11");
 
-  if (!playing.includes(keeper)) {
-    alert("Keeper must be from Playing 11");
-    return;
-  }
+const url=`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(selected))}&captainId=${captain}&keeperId=${keeper}`;
 
-  const url =
-    `${API}?action=savePlaying11` +
-    `&matchId=${MATCH_ID}` +
-    `&teamId=${teamId}` +
-    `&captainId=${captain}` +
-    `&keeperId=${keeper}` +
-    `&players=${encodeURIComponent(JSON.stringify(playing))}`;
-
-  fetch(url)
-    .then(r => r.json())
-    .then(res => {
-      if (res.status === "ok") {
-        alert("Playing11 Saved ✅");
-      } else {
-        alert("Error: " + res.message);
-      }
-    });
+fetch(url)
+.then(r=>r.json())
+.then(res=>{
+if(res.status==="ok") alert("Playing11 Saved ✅");
+else alert(res.message);
+});
 }
+
 loadTeams();
 </script>
 </body>
