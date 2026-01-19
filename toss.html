@@ -40,9 +40,7 @@ button{
 
   <!-- Toss Winner -->
   <select id="tossWinner">
-    <option value="">-- Select Toss Winner --</option>
-    <option value="TEAM_A">TEAM A</option>
-    <option value="TEAM_B">TEAM B</option>
+    <option value="">Loading teams...</option>
   </select>
 
   <!-- Decision -->
@@ -61,10 +59,15 @@ const MATCH_ID="MATCH_1767874129183";
 
 let teamA="", teamB="";
 
-// Load match teams dynamically
+// ✅ Load teams only once
 fetch(`${API}?action=getMatch&matchId=${MATCH_ID}`)
 .then(r=>r.json())
 .then(d=>{
+  if(d.status!=="ok"){
+    document.getElementById("tossWinner").innerHTML="<option>Match not found</option>";
+    return;
+  }
+
   teamA=d.teamAId;
   teamB=d.teamBId;
 
@@ -75,23 +78,7 @@ fetch(`${API}?action=getMatch&matchId=${MATCH_ID}`)
   `;
 });
 
-  function loadMatchTeams() {
-  fetch(API + `?action=getMatches`)
-    .then(r => r.json())
-    .then(d => {
-      const m = d.matches.find(x => x.matchId === MATCH_ID);
-      if (!m) return alert("Match not found");
-
-      document.getElementById("tossWinner").innerHTML = `
-        <option value="">-- Select Toss Winner --</option>
-        <option value="${m.teamAId}">${m.teamAId}</option>
-        <option value="${m.teamBId}">${m.teamBId}</option>
-      `;
-    });
-}
-
-loadMatchTeams();
-
+// ✅ Confirm Toss
 function confirmToss(){
   const tossWinner=document.getElementById("tossWinner").value;
   const decision=document.getElementById("decision").value;
@@ -104,7 +91,11 @@ function confirmToss(){
   fetch(`${API}?action=setToss&matchId=${MATCH_ID}&tossWinner=${tossWinner}&decision=${decision}`)
   .then(r=>r.json())
   .then(d=>{
-    alert("Batting First : "+d.battingFirst);
+    if(d.status==="ok"){
+      alert("Batting First : "+d.battingFirst);
+    }else{
+      alert("Error: "+d.message);
+    }
   });
 }
 </script>
