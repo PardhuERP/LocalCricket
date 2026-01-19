@@ -25,6 +25,30 @@ if(!MATCH_ID) return alert("Select match");
 loadLiveScore();
 }
 
+/*LOAD OPENING */
+
+function loadOpeningPlayers(match){
+  fetch(`${API}?action=getPlayers&teamId=${match.teamAId}`)
+  .then(r=>r.json())
+  .then(bat=>{
+    strikerSelect.innerHTML='<option value="">Striker</option>';
+    nonStrikerSelect.innerHTML='<option value="">Non-Striker</option>';
+    bat.players.forEach(p=>{
+      strikerSelect.innerHTML+=`<option value="${p.playerId}">${p.playerName}</option>`;
+      nonStrikerSelect.innerHTML+=`<option value="${p.playerId}">${p.playerName}</option>`;
+    });
+  });
+
+  fetch(`${API}?action=getPlayers&teamId=${match.teamBId}`)
+  .then(r=>r.json())
+  .then(bowl=>{
+    bowlerSelect.innerHTML='<option value="">Bowler</option>';
+    bowl.players.forEach(p=>{
+      bowlerSelect.innerHTML+=`<option value="${p.playerId}">${p.playerName}</option>`;
+    });
+  });
+}
+
 /* LIVE STATE */
 function loadLiveScore(){
 if(!MATCH_ID) return;
@@ -37,6 +61,32 @@ if(d.status!=="ok") return;
 el("teamScore").innerText=`${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
 el("state").innerText=d.state;
 });
+}
+
+/*LOAD MATCH*/
+
+function loadSelectedMatch(){
+MATCH_ID = matchSelect.value;
+if(!MATCH_ID) return alert("Select match");
+
+const match = matches.find(m=>m.matchId===MATCH_ID);
+loadOpeningPlayers(match);   // 👈 NEW
+loadLiveScore();
+}
+
+/*SET OPENING BACK*/
+
+function setOpening(){
+const striker=strikerSelect.value;
+const nonStriker=nonStrikerSelect.value;
+const bowler=bowlerSelect.value;
+
+if(!striker||!nonStriker||!bowler)
+return alert("Select striker, non-striker & bowler");
+
+fetch(`${API}?action=setOpeningPlayers&matchId=${MATCH_ID}&strikerId=${striker}&nonStrikerId=${nonStriker}&bowlerId=${bowler}`)
+.then(r=>r.json())
+.then(()=>alert("Opening players set ✅"));
 }
 
 /* ACTION CALL */
