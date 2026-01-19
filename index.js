@@ -59,15 +59,22 @@ bowlerSelect.innerHTML+=`<option value="${p.playerId}">${p.playerName}</option>`
 
 /* SET OPENING */
 function setOpening(){
-const striker=strikerSelect.value;
-const nonStriker=nonStrikerSelect.value;
-const bowler=bowlerSelect.value;
+const striker = strikerSelect.value;
+const nonStriker = nonStrikerSelect.value;
+const bowler = bowlerSelect.value;
 
-if(!striker||!nonStriker||!bowler)
-return alert("Select striker, non-striker & bowler");
+if(!striker || !nonStriker || !bowler)
+  return alert("Select striker, non-striker & bowler");
 
 fetch(`${API}?action=setOpeningPlayers&matchId=${MATCH_ID}&strikerId=${striker}&nonStrikerId=${nonStriker}&bowlerId=${bowler}`)
-.then(()=>alert("Opening players set ✅"));
+.then(() => {
+  alert("Opening players set ✅");
+
+  // hide opening box after success
+  document.getElementById("openingBox").style.display = "none";
+
+  loadLiveScore();
+});
 }
 
 /* LIVE SCORE */
