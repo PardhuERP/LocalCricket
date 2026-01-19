@@ -44,6 +44,15 @@ button{flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;backgro
 
 <label><b>Select Match</b></label>
 <select id="matchSelect"></select>
+  <div id="openingBox" style="margin-top:10px">
+  <label><b>Opening Setup</b></label>
+
+  <select id="strikerSelect"></select>
+  <select id="nonStrikerSelect"></select>
+  <select id="bowlerSelect"></select>
+
+  <button onclick="setOpening()">SET OPENERS</button>
+</div>
 <button onclick="loadSelectedMatch()">LOAD MATCH</button>
 
 <div class="state" id="state">WAITING...</div>
