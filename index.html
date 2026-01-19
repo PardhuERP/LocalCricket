@@ -11,11 +11,6 @@ body{margin:0;font-family:Arial;background:#f2f4f8}
 .team-name{font-size:18px;font-weight:bold}
 .team-score{font-size:34px;font-weight:bold;margin-top:4px}
 .meta-row{display:flex;gap:20px;font-size:14px;color:#555;margin:8px 0 14px}
-.table{margin-top:12px}
-.table-head,.table-row{display:grid;grid-template-columns:2fr repeat(5,1fr);font-size:14px;padding:6px 0}
-.table-head{color:#777;border-bottom:1px solid #ddd}
-.name{font-weight:bold}
-.star{color:#0a7cff}
 .divider{height:1px;background:#e0e0e0;margin:16px 0}
 .state{text-align:center;padding:8px;border-radius:8px;font-weight:bold;background:#e3f2fd;margin-top:14px}
 .row-btn{display:flex;gap:10px;margin-bottom:10px}
@@ -23,10 +18,12 @@ button{flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;backgro
 .extra{background:#ff9800}
 .wicket{background:#e53935}
 .undo{background:#444}
-.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
-.popup.hidden{display:none}
-.popup-box{background:#fff;padding:20px;border-radius:14px;width:280px}
-.popup-box select{width:100%;padding:10px;margin:12px 0;font-size:16px}
+select{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:13px;
+}
 </style>
 </head>
 
@@ -44,19 +41,25 @@ button{flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;backgro
 
 <label><b>Select Match</b></label>
 <select id="matchSelect"></select>
-  <div id="openingBox" style="margin-top:10px">
-  <label><b>Opening Setup</b></label>
 
-  <select id="strikerSelect"></select>
-  <select id="nonStrikerSelect"></select>
-  <select id="bowlerSelect"></select>
+<!-- ✅ Opening Setup -->
+<div id="openingBox" style="margin:12px 0">
+<label style="font-size:13px;color:#555"><b>Opening Setup</b></label>
 
-  <button onclick="setOpening()">SET OPENERS</button>
+<div style="display:flex;gap:6px;margin-top:6px">
+<select id="strikerSelect" style="flex:1"></select>
+<select id="nonStrikerSelect" style="flex:1"></select>
+<select id="bowlerSelect" style="flex:1"></select>
 </div>
+
+<button onclick="setOpening()" style="margin-top:8px">SET OPENERS</button>
+</div>
+
 <button onclick="loadSelectedMatch()">LOAD MATCH</button>
 
 <div class="state" id="state">WAITING...</div>
 
+<!-- Runs -->
 <div class="row-btn">
 <button onclick="addRun(0)">0</button>
 <button onclick="addRun(1)">1</button>
@@ -69,10 +72,12 @@ button{flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;backgro
 <button onclick="addRun(6)">6</button>
 </div>
 
+<!-- Extras & Wickets -->
 <div class="row-btn">
 <button class="extra" onclick="addExtra('WD')">WD</button>
 <button class="extra" onclick="addExtra('NB')">NB</button>
 <button class="wicket" onclick="addWicket()">W</button>
+<button class="wicket" onclick="openRunOutPopup()">RO</button>
 <button class="undo" onclick="undoBall()">UNDO</button>
 </div>
 
