@@ -56,37 +56,38 @@ button{
 </div>
 
 <script>
-const API =
-"https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+const MATCH_ID="MATCH_1767874129183";
 
-const MATCH_ID = "MATCH_1767874129183";
+let teamA="", teamB="";
 
-function confirmToss() {
-  const tossWinner = document.getElementById("tossWinner").value;
-  const decision = document.getElementById("decision").value;
+// Load match teams dynamically
+fetch(`${API}?action=getMatch&matchId=${MATCH_ID}`)
+.then(r=>r.json())
+.then(d=>{
+  teamA=d.teamAId;
+  teamB=d.teamBId;
 
-  if (!tossWinner || !decision) {
-    alert("Select Toss Winner and Decision");
+  document.getElementById("tossWinner").innerHTML=`
+    <option value="">-- Select Toss Winner --</option>
+    <option value="${teamA}">${teamA}</option>
+    <option value="${teamB}">${teamB}</option>
+  `;
+});
+
+function confirmToss(){
+  const tossWinner=document.getElementById("tossWinner").value;
+  const decision=document.getElementById("decision").value;
+
+  if(!tossWinner || !decision){
+    alert("Select Toss Winner & Decision");
     return;
   }
 
-  fetch(
-    API +
-    `?action=setToss` +
-    `&matchId=${MATCH_ID}` +
-    `&tossWinner=${tossWinner}` +
-    `&decision=${decision}`
-  )
-  .then(r => r.json())
-  .then(d => {
-    if (d.status === "ok") {
-      alert(
-        "Toss Winner : " + d.tossWinner +
-        "\nBatting First : " + d.battingFirst
-      );
-    } else {
-      alert("Error: " + d.message);
-    }
+  fetch(`${API}?action=setToss&matchId=${MATCH_ID}&tossWinner=${tossWinner}&decision=${decision}`)
+  .then(r=>r.json())
+  .then(d=>{
+    alert("Batting First : "+d.battingFirst);
   });
 }
 </script>
