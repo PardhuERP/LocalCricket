@@ -1,62 +1,68 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Playing 11</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{font-family:Arial;background:#f2f4f8;padding:20px}
-.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
-select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
-.player{display:flex;align-items:center;gap:10px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}
-.head{font-size:12px;color:#555;width:60px;text-align:center}
-.count{font-size:13px;color:#777;margin:6px 0;text-align:right}
-button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
-</style>
-</head>
-<body>
-
-<div class="box">
-<h2>Select Playing 11</h2>
-
-<label><b>Select Team</b></label>
-<select id="teamSelect" onchange="loadPlayers()"></select>
-
-<div class="count" id="count">0 selected</div>
-
-<div style="display:flex;font-size:12px;color:#555;margin-top:6px">
-<div class="head">PLAY</div>
-<div class="head">CAP</div>
-<div class="head">WK</div>
-<div style="flex:1"></div>
-</div>
-
-<div id="players"></div>
-
-<button onclick="savePlaying11()">SAVE PLAYING11</button>
-</div>
-
-<script>
-const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
-const MATCH_ID="MATCH_1768624533546";
-
-const teamSelect=document.getElementById("teamSelect");
-const playersDiv=document.getElementById("players");
-const count=document.getElementById("count");
-
-function loadTeams(){
-fetch(`${API}?action=getTeams`)
-.then(r=>r.json())
-.then(d=>{
-let html=`<option value="">-- Select Team --</option>`;
-d.teams.forEach(t=>{
-html+=`<option value="${t.teamId}">${t.teamName}</option>`;
-});
-teamSelect.innerHTML=html;
-});
-}
-
-function loadPlayers(){
+<!DOCTYPE html>  
+<html>  
+<head>  
+<meta charset="UTF-8">  
+<title>Playing 11</title>  
+<meta name="viewport" content="width=device-width, initial-scale=1">  
+<style>  
+body{font-family:Arial;background:#f2f4f8;padding:20px}  
+.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}  
+select,button{width:100%;padding:12px;margin:8px 0;font-size:16px}  
+.player{display:flex;align-items:center;gap:10px;font-size:14px;padding:8px 0;border-bottom:1px solid #eee}  
+.head{font-size:12px;color:#555;width:60px;text-align:center}  
+.count{font-size:13px;color:#777;margin:6px 0;text-align:right}  
+button{background:#0a7cff;color:#fff;border:none;border-radius:8px}  
+</style>  
+</head>  
+<body>  
+  
+<div class="box">  
+<h2>Select Playing 11</h2>  
+  
+<label><b>Select Team</b></label>  
+<select id="teamSelect" onchange="loadPlayers()"></select>  
+  
+<div class="count" id="count">0 selected</div>  
+  
+<div style="display:flex;font-size:12px;color:#555;margin-top:6px">  
+<div class="head">PLAY</div>  
+<div class="head">CAP</div>  
+<div class="head">WK</div>  
+<div style="flex:1"></div>  
+</div>  
+  
+<div id="players"></div>  
+  
+<button onclick="savePlaying11()">SAVE PLAYING11</button>  
+</div>  
+  
+<script>  
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";  
+const MATCH_ID="MATCH_1768624533546";  
+  
+const teamSelect=document.getElementById("teamSelect");  
+const playersDiv=document.getElementById("players");  
+const count=document.getElementById("count");  
+  
+function loadTeams(){  
+fetch(`${API}?action=getTeams`)  
+.then(r=>r.json())  
+.then(d=>{  
+let html=`<option value="">-- Select Team --</option>`;  
+d.teams.forEach(t=>{  
+html+=`<option value="${t.teamId}">${t.teamName}</option>`;  
+});  
+teamSelect.innerHTML=html;  
+});  
+}  
+  
+function loadPlayers(){  
+const teamId=teamSelect.value;  
+playersDiv.innerHTML="";  
+if(!teamId)return;  
+  
+fetch(`${API}?action=getPlayers&teamId=${teamId}`)  
+.then(r=>r.json())  
 .then(d=>{
   let html = "";   // ✅ build first
   d.players.forEach(p=>{
@@ -72,12 +78,12 @@ function loadPlayers(){
   playersDiv.innerHTML = html;  // ✅ inject once only
   updateCount();
 });
-
-function updateCount(){
-const n=document.querySelectorAll(".play:checked").length;
-count.innerText=`${n} selected`;
-}
-
+  
+function updateCount(){  
+const n=document.querySelectorAll(".play:checked").length;  
+count.innerText=`${n} selected`;  
+}  
+  
 function savePlaying11(){
 const teamId=teamSelect.value;
 const playing=[...document.querySelectorAll(".play:checked")].map(p=>p.value);
@@ -94,8 +100,8 @@ fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=
 .then(r=>r.json())
 .then(res=>alert("Playing11 Saved ✅"));
 }
-
-loadTeams();
-</script>
-</body>
+  
+loadTeams();  
+</script>  
+</body>  
 </html>
