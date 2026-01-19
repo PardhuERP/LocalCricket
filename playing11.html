@@ -81,45 +81,49 @@ count.innerText=`${n} selected`;
    SAVE PLAYING11
 ========================= */
 function savePlaying11() {
-  const teamId = teamSelect.value;
-  const selected = [...document.querySelectorAll(".play:checked")];
 
-  if (selected.length !== 11) {
+  const teamId = teamSelect.value;
+  const playing = [...document.querySelectorAll(".play:checked")]
+    .map(p => p.value);
+
+  if (playing.length !== 11) {
     alert("Select exactly 11 players");
     return;
   }
 
-  const captainId =
+  const captain =
     document.querySelector("input[name=captain]:checked")?.value || "";
-  const keeperId =
+  const keeper =
     document.querySelector("input[name=keeper]:checked")?.value || "";
 
-  if (!captainId || !keeperId) {
-    alert("Select Captain & Keeper");
+  if (!playing.includes(captain)) {
+    alert("Captain must be from Playing 11");
     return;
   }
 
-  const playersArr = selected.map(c => c.value);
+  if (!playing.includes(keeper)) {
+    alert("Keeper must be from Playing 11");
+    return;
+  }
 
   const url =
     `${API}?action=savePlaying11` +
     `&matchId=${MATCH_ID}` +
     `&teamId=${teamId}` +
-    `&captainId=${captainId}` +
-    `&keeperId=${keeperId}` +
-    `&players=${encodeURIComponent(JSON.stringify(playersArr))}`;
+    `&captainId=${captain}` +
+    `&keeperId=${keeper}` +
+    `&players=${encodeURIComponent(JSON.stringify(playing))}`;
 
   fetch(url)
     .then(r => r.json())
-    .then(d => {
-      if (d.status === "ok") {
+    .then(res => {
+      if (res.status === "ok") {
         alert("Playing11 Saved ✅");
       } else {
-        alert("Error: " + d.message);
+        alert("Error: " + res.message);
       }
     });
 }
-
 loadTeams();
 </script>
 </body>
