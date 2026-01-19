@@ -4,96 +4,95 @@ const MATCH_ID="MATCH_1768804773924";
 const el=id=>document.getElementById(id);
 
 /* LIVE LOAD */
-function loadLive(){
-fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`)
-.then(r=>r.json())
-.then(d=>{
+async function loadLive(){
+const r=await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`);
+const d=await r.json();
 if(d.status!=="ok") return;
 
-el("teamName").innerText=d.battingTeamName;
-el("teamScore").innerText=`${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
+const over=Number(d.over)||0;
+const ball=Number(d.ball)||0;
 
-const balls=d.over*6+d.ball;
+el("teamName").innerText=d.battingTeamName||"";
+el("teamScore").innerText=`${d.totalRuns}-${d.wickets} (${over}.${ball})`;
+
+const balls=over*6+ball;
 const crr=balls?(d.totalRuns/(balls/6)).toFixed(2):"0.00";
 el("crr").innerText=`CRR ${crr}`;
 el("pship").innerText=`P'SHIP ${d.partnershipRuns||0}(${d.partnershipBalls||0})`;
 
 loadBatters(d.strikerId,d.nonStrikerId);
 loadBowler(d.bowlerId);
-});
+}
+
+/* PLAYER NAME */
+async function getName(id){
+if(!id) return "";
+const r=await fetch(`${API}?action=getPlayerName&playerId=${id}`);
+const d=await r.json();
+return d.name||id;
 }
 
 /* BATTERS */
-function loadBatters(s,n){
-fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`)
-.then(r=>r.json())
-.then(d=>{
+async function loadBatters(s,n){
+
+const r=await fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`);
+const d=await r.json();
+
 const a=d.stats[s]||{runs:0,balls:0,fours:0,sixes:0};
 const b=d.stats[n]||{runs:0,balls:0,fours:0,sixes:0};
 
 const sr1=a.balls?((a.runs/a.balls)*100).toFixed(2):"0.00";
 const sr2=b.balls?((b.runs/b.balls)*100).toFixed(2):"0.00";
 
-// 👇 Fetch Names for striker & non-striker
-Promise.all([
-fetch(`${API}?action=getPlayerName&playerId=${s}`).then(r=>r.json()),
-fetch(`${API}?action=getPlayerName&playerId=${n}`).then(r=>r.json())
-]).then(([sn,nn])=>{
+const sn=await getName(s);
+const nn=await getName(n);
 
 el("batRows").innerHTML=`
 <div class="row">
-<span class="name star">*</span><span>${sn.name}</span>
+<span class="name star">* ${sn}</span>
 <span>${a.runs}</span><span>${a.balls}</span>
 <span>${a.fours}</span><span>${a.sixes}</span><span>${sr1}</span>
 </div>
 
 <div class="row">
-<span>${nn.name}</span>
+<span>${nn}</span>
 <span>${b.runs}</span><span>${b.balls}</span>
 <span>${b.fours}</span><span>${b.sixes}</span><span>${sr2}</span>
 </div>`;
-});
-});
 }
 
 /* BOWLER */
-function loadBowler(id){
+async function loadBowler(id){
+if(!id){ el("bowlRows").innerHTML=""; return; }
 
-if(!id){
-  el("bowlRows").innerHTML="";
-  return;
-}
-
-Promise.all([
+const [sr,name]=await Promise.all([
 fetch(`${API}?action=getPlayerMatchStats&matchId=${MATCH_ID}`).then(r=>r.json()),
-fetch(`${API}?action=getPlayerName&playerId=${id}`).then(r=>r.json())
-])
-.then(([d,n])=>{
+getName(id)
+]);
 
-const b=d.stats[id]||{overs:0,balls:0,maidens:0,runsGiven:0,wickets:0};
+const b=sr.stats[id]||{overs:0,balls:0,maidens:0,runsGiven:0,wickets:0};
 
-const totalOvers = `${b.overs}.${b.balls||0}`;
+const overs=`${b.overs}.${b.balls||0}`;
 const eco=b.overs?(b.runsGiven/b.overs).toFixed(2):"0.00";
 
 el("bowlRows").innerHTML=`
 <div class="row">
-  <span class="name star">*</span>
-  <span>${n.name}</span>
-  <span>${totalOvers}</span>
-  <span>${b.maidens}</span>
-  <span>${b.runsGiven}</span>
-  <span>${b.wickets}</span>
-  <span>${eco}</span>
+<span class="name star">* ${name}</span>
+<span>${overs}</span>
+<span>${b.maidens}</span>
+<span>${b.runsGiven}</span>
+<span>${b.wickets}</span>
+<span>${eco}</span>
 </div>`;
-});
 }
 
 /* ACTIONS */
-const call=a=>fetch(`${API}?action=${a}`);
-function addRun(r){call(`addRun&matchId=${MATCH_ID}&runs=${r}`).then(loadLive);}
-function addExtra(t){call(`addExtra&matchId=${MATCH_ID}&type=${t}`).then(loadLive);}
-function addWicket(){call(`addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`).then(loadLive);}
-function undoBall(){call(`undoBall&matchId=${MATCH_ID}`).then(loadLive);}
+const call=url=>fetch(url).then(()=>setTimeout(loadLive,300));
+
+function addRun(r){call(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`);}
+function addExtra(t){call(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${t}`);}
+function addWicket(){call(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`);}
+function undoBall(){call(`${API}?action=undoBall&matchId=${MATCH_ID}`);}
 
 /* MIC */
 function startMic(){
@@ -103,9 +102,9 @@ rec.start();
 rec.onresult=e=>{
 const t=e.results[0][0].transcript.toLowerCase();
 if(t.includes("four")) addRun(4);
-if(t.includes("six")) addRun(6);
-if(t.includes("one")) addRun(1);
-if(t.includes("out")) addWicket();
+else if(t.includes("six")) addRun(6);
+else if(t.includes("one")) addRun(1);
+else if(t.includes("out")) addWicket();
 };
 }
 
