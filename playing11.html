@@ -36,37 +36,37 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 <button onclick="savePlaying11()">SAVE PLAYING11</button>  
 </div>  
   
-<script>  
-const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";  
-const MATCH_ID="MATCH_1768624533546";  
-  
-const teamSelect=document.getElementById("teamSelect");  
-const playersDiv=document.getElementById("players");  
-const count=document.getElementById("count");  
-  
-function loadTeams(){  
-fetch(`${API}?action=getTeams`)  
-.then(r=>r.json())  
-.then(d=>{  
-let html=`<option value="">-- Select Team --</option>`;  
-d.teams.forEach(t=>{  
-html+=`<option value="${t.teamId}">${t.teamName}</option>`;  
-});  
-teamSelect.innerHTML=html;  
-});  
-}  
-  
-function loadPlayers(){  
-const teamId=teamSelect.value;  
-playersDiv.innerHTML="";  
-if(!teamId)return;  
-  
-fetch(`${API}?action=getPlayers&teamId=${teamId}`)  
-.then(r=>r.json())  
+<script>
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+const MATCH_ID="MATCH_1768624533546";
+
+const teamSelect=document.getElementById("teamSelect");
+const playersDiv=document.getElementById("players");
+const count=document.getElementById("count");
+
+function loadTeams(){
+fetch(`${API}?action=getTeams`)
+.then(r=>r.json())
 .then(d=>{
-  let html = "";   // ✅ build first
+let html=`<option value="">-- Select Team --</option>`;
+d.teams.forEach(t=>{
+html+=`<option value="${t.teamId}">${t.teamName}</option>`;
+});
+teamSelect.innerHTML=html;
+});
+}
+
+function loadPlayers(){
+const teamId=teamSelect.value;
+playersDiv.innerHTML="";
+if(!teamId) return;
+
+fetch(`${API}?action=getPlayers&teamId=${teamId}`)
+.then(r=>r.json())
+.then(d=>{
+  let html="";
   d.players.forEach(p=>{
-    html += `
+    html+=`
     <div class="player">
       <input type="checkbox" class="play" value="${p.playerId}" onchange="updateCount()">
       <input type="radio" name="captain" value="${p.playerId}">
@@ -74,17 +74,16 @@ fetch(`${API}?action=getPlayers&teamId=${teamId}`)
       <span>${p.playerName}</span>
     </div>`;
   });
-}
-
-  playersDiv.innerHTML = html;  // ✅ inject once only
+  playersDiv.innerHTML=html;
   updateCount();
 });
-  
-function updateCount(){  
-const n=document.querySelectorAll(".play:checked").length;  
-count.innerText=`${n} selected`;  
-}  
-  
+}  <!-- ✅ function closed properly -->
+
+function updateCount(){
+const n=document.querySelectorAll(".play:checked").length;
+count.innerText=`${n} selected`;
+}
+
 function savePlaying11(){
 const teamId=teamSelect.value;
 const playing=[...document.querySelectorAll(".play:checked")].map(p=>p.value);
@@ -99,10 +98,10 @@ if(!playing.includes(keeper)) return alert("Keeper must be from playing11");
 
 fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(playing))}&captainId=${captain}&keeperId=${keeper}`)
 .then(r=>r.json())
-.then(res=>alert("Playing11 Saved ✅"));
+.then(()=>alert("Playing11 Saved ✅"));
 }
-  
-loadTeams();  
-</script>  
+
+loadTeams();
+</script>
 </body>  
 </html>
