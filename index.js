@@ -160,7 +160,6 @@ async function confirmPopup() {
   closePopup();
   setTimeout(loadLive, 500);
 }
-
 /* ACTIONS */
 const call=url=>fetch(url).then(()=>setTimeout(loadLive,300));
 
