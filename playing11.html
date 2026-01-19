@@ -82,48 +82,21 @@ const n=document.querySelectorAll(".play:checked").length;
 count.innerText=`${n} selected`;
 }
 
-function savePlaying11(matchId, teamId, players, captainId, keeperId) {
-  if (!matchId || !teamId || !players) {
-    return { status: "error", message: "matchId, teamId, players required" };
-  }
+function savePlaying11(){
+const teamId=teamSelect.value;
+const playing=[...document.querySelectorAll(".play:checked")].map(p=>p.value);
 
-  const list = JSON.parse(players);
-  if (list.length !== 11) {
-    return { status: "error", message: "Exactly 11 players required" };
-  }
+if(playing.length!==11) return alert("Select exactly 11 players");
 
-  const pSh = getSheet("PLAYERS");
-  const pRows = pSh.getDataRange().getValues();
+const captain=document.querySelector("input[name=captain]:checked")?.value||"";
+const keeper=document.querySelector("input[name=keeper]:checked")?.value||"";
 
-  const nameMap = {};
-  for (let i = 1; i < pRows.length; i++) {
-    nameMap[pRows[i][0]] = pRows[i][2];
-  }
+if(!playing.includes(captain)) return alert("Captain must be from playing11");
+if(!playing.includes(keeper)) return alert("Keeper must be from playing11");
 
-  const sh = getSheet("PLAYING11");
-
-  const rows = sh.getDataRange().getValues();
-  for (let i = rows.length; i > 1; i--) {
-    if (rows[i - 1][0] === matchId && rows[i - 1][1] === teamId) {
-      sh.deleteRow(i);
-    }
-  }
-
-  const now = new Date();
-
-  list.forEach(pid => {
-    sh.appendRow([
-      matchId,
-      teamId,
-      pid,
-      nameMap[pid] || "",
-      pid === captainId,
-      pid === keeperId,
-      now
-    ]);
-  });
-
-  return { status: "ok", message: "Playing11 Saved" };
+fetch(`${API}?action=savePlaying11&matchId=${MATCH_ID}&teamId=${teamId}&players=${encodeURIComponent(JSON.stringify(playing))}&captainId=${captain}&keeperId=${keeper}`)
+.then(r=>r.json())
+.then(res=>alert("Playing11 Saved ✅"));
 }
 
 loadTeams();
