@@ -2,52 +2,74 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Live Match</title>
+<title>Live Scoring Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{margin:0;font-family:Arial;background:#f2f4f8}
-.board{max-width:380px;margin:20px auto;background:#fff;border-radius:16px;padding:18px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
-
+.board{max-width:400px;margin:10px auto;background:#fff;border-radius:16px;padding:16px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
 .team{font-size:18px;font-weight:bold}
-.score{font-size:34px;font-weight:bold;margin-top:4px}
-
+.score{font-size:32px;font-weight:bold;margin-top:4px}
 .meta{display:flex;justify-content:space-between;font-size:14px;color:#555;margin:6px 0 12px}
-
 .table-head,.row{display:grid;grid-template-columns:2fr repeat(5,1fr);font-size:14px;padding:6px 0}
 .table-head{color:#777;border-bottom:1px solid #ddd}
 .name{font-weight:bold}
 .star{color:#0a7cff}
-
-.bowler-head,.bowler-row{display:grid;grid-template-columns:2fr repeat(5,1fr);font-size:14px;padding:6px 0}
-.bowler-head{color:#777;border-bottom:1px solid #ddd;margin-top:10px}
-
-.footer{text-align:center;font-size:12px;color:#888;margin-top:10px}
+.bowler-head{margin-top:10px}
+.buttons{margin-top:12px}
+.row-btn{display:flex;gap:8px;margin-bottom:8px}
+button{flex:1;padding:12px;font-size:18px;border:none;border-radius:10px;background:#0a7cff;color:#fff}
+.extra{background:#ff9800}
+.wicket{background:#e53935}
+.undo{background:#444}
+.mic{background:#009688}
 </style>
 </head>
 
 <body>
 
 <div class="board">
-  <div class="team" id="teamName">TEAM</div>
-  <div class="score" id="teamScore">0-0 (0.0)</div>
+<div class="team" id="teamName">TEAM</div>
+<div class="score" id="teamScore">0-0 (0.0)</div>
 
-  <div class="meta">
-    <span id="crr">CRR 0.00</span>
-    <span id="pship">P'SHIP 0(0)</span>
-  </div>
+<div class="meta">
+<span id="crr">CRR 0.00</span>
+<span id="pship">P'SHIP 0(0)</span>
+</div>
 
-  <div class="table-head">
-    <span>Batter</span><span>R</span><span>B</span><span>4s</span><span>6s</span><span>SR</span>
-  </div>
-  <div id="batRows"></div>
+<div class="table-head">
+<span>Batter</span><span>R</span><span>B</span><span>4s</span><span>6s</span><span>SR</span>
+</div>
+<div id="batRows"></div>
 
-  <div class="bowler-head">
-    <span>Bowler</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span>
-  </div>
-  <div id="bowlRows"></div>
+<div class="table-head bowler-head">
+<span>Bowler</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span>
+</div>
+<div id="bowlRows"></div>
 
-  <div class="footer">Live Local Match Score</div>
+<div class="buttons">
+<div class="row-btn">
+<button onclick="addRun(0)">0</button>
+<button onclick="addRun(1)">1</button>
+<button onclick="addRun(2)">2</button>
+</div>
+
+<div class="row-btn">
+<button onclick="addRun(4)">4</button>
+<button onclick="addRun(6)">6</button>
+<button class="wicket" onclick="addWicket()">W</button>
+</div>
+
+<div class="row-btn">
+<button class="extra" onclick="addExtra('WD')">WD</button>
+<button class="extra" onclick="addExtra('NB')">NB</button>
+<button class="undo" onclick="undoBall()">UNDO</button>
+</div>
+
+<div class="row-btn">
+<button class="mic" onclick="startMic()">🎤 MIC</button>
+</div>
+</div>
 </div>
 
 <script src="index.js"></script>
