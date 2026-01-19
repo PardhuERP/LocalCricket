@@ -2,74 +2,114 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Live Scoring Panel</title>
+<title>Live Scoreboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{margin:0;font-family:Arial;background:#f2f4f8}
-.board{max-width:400px;margin:10px auto;background:#fff;border-radius:16px;padding:16px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
-.team{font-size:18px;font-weight:bold}
-.score{font-size:32px;font-weight:bold;margin-top:4px}
-.meta{display:flex;justify-content:space-between;font-size:14px;color:#555;margin:6px 0 12px}
-.table-head,.row{display:grid;grid-template-columns:2fr repeat(5,1fr);font-size:14px;padding:6px 0}
+.scoreboard{max-width:380px;margin:30px auto;background:#fff;border-radius:16px;padding:20px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+
+.team-name{font-size:18px;font-weight:bold}
+.team-score{font-size:34px;font-weight:bold;margin-top:4px}
+
+.meta-row{display:flex;gap:20px;font-size:14px;color:#555;margin:8px 0 14px}
+
+.table{margin-top:12px}
+.table-head,.table-row{display:grid;grid-template-columns:2fr repeat(5,1fr);font-size:14px;padding:6px 0}
 .table-head{color:#777;border-bottom:1px solid #ddd}
+.table-row{align-items:center}
 .name{font-weight:bold}
 .star{color:#0a7cff}
-.bowler-head{margin-top:10px}
-.buttons{margin-top:12px}
-.row-btn{display:flex;gap:8px;margin-bottom:8px}
-button{flex:1;padding:12px;font-size:18px;border:none;border-radius:10px;background:#0a7cff;color:#fff}
+
+.divider{height:1px;background:#e0e0e0;margin:16px 0}
+
+.state{text-align:center;padding:8px;border-radius:8px;font-weight:bold;background:#e3f2fd;margin-top:14px}
+
+.buttons{margin-top:16px}
+.row-btn{display:flex;gap:10px;margin-bottom:10px}
+
+button{flex:1;padding:14px;font-size:18px;border:none;border-radius:10px;background:#0a7cff;color:#fff;cursor:pointer}
 .extra{background:#ff9800}
 .wicket{background:#e53935}
 .undo{background:#444}
-.mic{background:#009688}
+
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000}
+.popup.hidden{display:none}
+.popup-box{background:#fff;padding:20px;border-radius:14px;width:280px}
+.popup-box select{width:100%;padding:10px;margin:12px 0;font-size:16px}
 </style>
 </head>
 
 <body>
 
-<div class="board">
-<div class="team" id="teamName">TEAM</div>
-<div class="score" id="teamScore">0-0 (0.0)</div>
+<div class="scoreboard">
 
-<div class="meta">
-<span id="crr">CRR 0.00</span>
-<span id="pship">P'SHIP 0(0)</span>
+  <!-- TEAM HEADER -->
+  <div class="team-name" id="teamName">SYS</div>
+  <div class="team-score" id="teamScore">0-0 (0.0)</div>
+
+  <div class="meta-row">
+    <span id="crr">CRR 0.00</span>
+    <span id="pship">P'SHIP 0(0)</span>
+  </div>
+
+  <!-- BATSMEN TABLE -->
+  <div class="table">
+    <div class="table-head">
+      <span>Batter</span><span>R</span><span>B</span><span>4s</span><span>6s</span><span>SR</span>
+    </div>
+    <div id="batsmanRows"></div>
+  </div>
+
+  <!-- BOWLER TABLE -->
+  <div class="table">
+    <div class="table-head">
+      <span>Bowler</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span>
+    </div>
+    <div id="bowlerRows"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- STATE -->
+  <div class="state" id="state">WAITING...</div>
+
+  <!-- BUTTONS -->
+  <div class="buttons">
+
+    <div class="row-btn">
+      <button onclick="addRun(0)">0</button>
+      <button onclick="addRun(1)">1</button>
+      <button onclick="addRun(2)">2</button>
+    </div>
+
+    <div class="row-btn">
+      <button onclick="addRun(3)">3</button>
+      <button onclick="addRun(4)">4</button>
+      <button onclick="addRun(6)">6</button>
+    </div>
+
+    <div class="row-btn">
+      <button class="extra" onclick="addExtra('WD')">WD</button>
+      <button class="extra" onclick="addExtra('NB')">NB</button>
+      <button class="wicket" onclick="addWicket()">W</button>
+      <button class="wicket" onclick="openRunOutPopup()">RO</button>
+    </div>
+
+    <div class="row-btn">
+      <button class="undo" onclick="undoBall()">UNDO</button>
+    </div>
+
+  </div>
 </div>
 
-<div class="table-head">
-<span>Batter</span><span>R</span><span>B</span><span>4s</span><span>6s</span><span>SR</span>
-</div>
-<div id="batRows"></div>
-
-<div class="table-head bowler-head">
-<span>Bowler</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span>
-</div>
-<div id="bowlRows"></div>
-
-<div class="buttons">
-<div class="row-btn">
-<button onclick="addRun(0)">0</button>
-<button onclick="addRun(1)">1</button>
-<button onclick="addRun(2)">2</button>
-</div>
-
-<div class="row-btn">
-<button onclick="addRun(4)">4</button>
-<button onclick="addRun(6)">6</button>
-<button class="wicket" onclick="addWicket()">W</button>
-</div>
-
-<div class="row-btn">
-<button class="extra" onclick="addExtra('WD')">WD</button>
-<button class="extra" onclick="addExtra('NB')">NB</button>
-<button class="undo" onclick="undoBall()">UNDO</button>
-</div>
-
-<div class="row-btn">
-<button class="mic" onclick="startMic()">🎤 MIC</button>
-</div>
-</div>
+<!-- POPUP -->
+<div id="popup" class="popup hidden">
+  <div class="popup-box">
+    <h3 id="popupTitle"></h3>
+    <select id="popupSelect"></select>
+    <button onclick="confirmPopup()">CONFIRM</button>
+  </div>
 </div>
 
 <script src="index.js"></script>
