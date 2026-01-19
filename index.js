@@ -11,8 +11,9 @@ if(d.status!=="ok") return;
 
 const over=Number(d.over)||0;
 const ball=Number(d.ball)||0;
-
-el("teamName").innerText=d.battingTeamName||"";
+  
+const tn = await fetch(`${API}?action=getTeamName&teamId=${d.battingTeamId}`).then(r=>r.json());
+el("teamName").innerText = tn.name;
 el("teamScore").innerText=`${d.totalRuns}-${d.wickets} (${over}.${ball})`;
 
 const balls=over*6+ball;
