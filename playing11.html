@@ -79,31 +79,47 @@ count.innerText=`${n} selected`;
 }
 
 function savePlaying11(){
-const teamId = teamSelect.value;
-const playing = [...document.querySelectorAll(".play:checked")].map(p=>p.value);
+/* =========================
+   SAVE PLAYING11
+========================= */
+function savePlaying11() {
+  const teamId = teamSelect.value;
+  const selected = [...document.querySelectorAll(".play:checked")];
 
-if(playing.length !== 11) return alert("Select exactly 11 players");
+  if (selected.length !== 11) {
+    alert("Select exactly 11 players");
+    return;
+  }
 
-const captain = document.querySelector("input[name=captain]:checked")?.value || "";
-const keeper  = document.querySelector("input[name=keeper]:checked")?.value || "";
+  const captainId =
+    document.querySelector("input[name=captain]:checked")?.value || "";
+  const keeperId =
+    document.querySelector("input[name=keeper]:checked")?.value || "";
 
-if(!playing.includes(captain)) return alert("Captain must be from playing 11");
-if(!playing.includes(keeper))  return alert("Keeper must be from playing 11");
+  if (!captainId || !keeperId) {
+    alert("Select Captain & Keeper");
+    return;
+  }
 
-// ✅ send ONLY ids to GAS
-const url = `${API}?action=savePlaying11`
-+ `&matchId=${MATCH_ID}`
-+ `&teamId=${teamId}`
-+ `&captainId=${captain}`
-+ `&keeperId=${keeper}`
-+ `&players=${encodeURIComponent(JSON.stringify(playing))}`;
+  const playersArr = selected.map(c => c.value);
 
-fetch(url)
-.then(r=>r.json())
-.then(res=>{
-  if(res.status==="ok") alert("Playing11 Saved ✅");
-  else alert(res.message);
-});
+  const url =
+    `${API}?action=savePlaying11` +
+    `&matchId=${MATCH_ID}` +
+    `&teamId=${teamId}` +
+    `&captainId=${captainId}` +
+    `&keeperId=${keeperId}` +
+    `&players=${encodeURIComponent(JSON.stringify(playersArr))}`;
+
+  fetch(url)
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === "ok") {
+        alert("Playing11 Saved ✅");
+      } else {
+        alert("Error: " + d.message);
+      }
+    });
 }
 
 loadTeams();
