@@ -2,59 +2,63 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Incoming Requests</title>
+<title>Match Requests</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body{font-family:Arial;background:#f2f4f8;padding:20px}
-.box{background:#fff;padding:16px;border-radius:12px;max-width:500px;margin:auto}
-.req{padding:12px;border-bottom:1px solid #ddd;font-size:14px}
-button{padding:6px 12px;border:none;border-radius:6px;margin-right:6px;cursor:pointer}
-.approve{background:#4caf50;color:#fff}
-.reject{background:#e53935;color:#fff}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:450px;margin:auto}
+.req{border-bottom:1px solid #eee;padding:10px 0;font-size:14px}
+button{padding:6px 10px;border:none;border-radius:6px;color:#fff;cursor:pointer}
+.approve{background:#2e7d32}
+.reject{background:#d32f2f}
+.small{font-size:12px;color:#666}
 </style>
 </head>
 <body>
 
 <div class="box">
-  <h2>Incoming Match Requests</h2>
-  <div id="reqList">Loading...</div>
+<h2>Incoming Match Requests</h2>
+<div id="list">Loading...</div>
 </div>
 
 <script>
 const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
-
-// 🔴 Change this to your logged teamId
-const TEAM_ID="TEAM_B";
+const TEAM_ID="TEAM_1767872095684";  // 👈 Team-B id
 
 function loadRequests(){
-fetch(API+`?action=getMatchRequests&teamId=${TEAM_ID}`)
+fetch(`${API}?action=getMatchRequests&teamId=${TEAM_ID}&type=INCOMING`)
 .then(r=>r.json())
 .then(d=>{
-if(d.status!=="ok"){reqList.innerHTML="No Requests";return;}
-const box=document.getElementById("reqList");
+const box=document.getElementById("list");
 box.innerHTML="";
+if(!d.incoming.length){
+box.innerHTML="No pending requests";
+return;
+}
+
 d.incoming.forEach(r=>{
 box.innerHTML+=`
 <div class="req">
-<b>${r.fromTeamId}</b> requested ${r.overs} overs<br>
-📍 ${r.venue}<br>
-📅 ${new Date(r.matchDate).toLocaleString()}<br>
-<button class="approve" onclick="approve('${r.requestId}')">Approve</button>
-<button class="reject" onclick="reject('${r.requestId}')">Reject</button>
+<b>${r.fromTeamId}</b> requested a match<br>
+<span class="small">
+Overs: ${r.overs} | ${r.matchType}<br>
+Venue: ${r.venue}<br>
+Date: ${new Date(r.matchDate).toLocaleString()}
+</span><br><br>
+<button class="approve" onclick="update('${r.requestId}','APPROVE')">APPROVE</button>
+<button class="reject" onclick="update('${r.requestId}','REJECT')">REJECT</button>
 </div>`;
 });
 });
 }
 
-function approve(id){
-fetch(API+`?action=approveRequest&requestId=${id}`)
-.then(()=>{alert("Approved & Match Created");loadRequests();});
-}
-
-function reject(id){
-fetch(API+`?action=rejectRequest&requestId=${id}`)
-.then(()=>{alert("Rejected");loadRequests();});
+function update(id,action){
+fetch(`${API}?action=updateMatchRequest&requestId=${id}&status=${action}`)
+.then(r=>r.json())
+.then(res=>{
+alert(res.message || action);
+loadRequests();
+});
 }
 
 loadRequests();
