@@ -75,6 +75,23 @@ fetch(`${API}?action=getMatch&matchId=${MATCH_ID}`)
   `;
 });
 
+  function loadMatchTeams() {
+  fetch(API + `?action=getMatches`)
+    .then(r => r.json())
+    .then(d => {
+      const m = d.matches.find(x => x.matchId === MATCH_ID);
+      if (!m) return alert("Match not found");
+
+      document.getElementById("tossWinner").innerHTML = `
+        <option value="">-- Select Toss Winner --</option>
+        <option value="${m.teamAId}">${m.teamAId}</option>
+        <option value="${m.teamBId}">${m.teamBId}</option>
+      `;
+    });
+}
+
+loadMatchTeams();
+
 function confirmToss(){
   const tossWinner=document.getElementById("tossWinner").value;
   const decision=document.getElementById("decision").value;
