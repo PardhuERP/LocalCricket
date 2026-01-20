@@ -16,6 +16,11 @@ body{margin:0;font-family:Arial;background:#f2f4f8}
 .name{font-weight:bold}
 .star{color:#0a7cff}
 .footer{text-align:center;font-size:12px;color:#888;margin-top:10px}
+.row-btn{display:flex;gap:8px;margin-bottom:8px}
+button{flex:1;padding:14px;font-size:16px;border:none;border-radius:10px;background:#0a7cff;color:#fff}
+.extra{background:#ff9800}
+.wicket{background:#e53935}
+.undo{background:#444}
 </style>
 </head>
 
@@ -39,6 +44,35 @@ body{margin:0;font-family:Arial;background:#f2f4f8}
     <span>Bowler</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span>
   </div>
   <div id="bowlRows"></div>
+
+  <div class="row-btn">
+  <button onclick="addRun(0)">0</button>
+  <button onclick="addRun(1)">1</button>
+  <button onclick="addRun(2)">2</button>
+</div>
+
+<div class="row-btn">
+  <button onclick="addRun(4)">4</button>
+  <button onclick="addRun(6)">6</button>
+</div>
+
+<div class="row-btn">
+  <button class="extra" onclick="addExtra('WD')">WD</button>
+  <button class="extra" onclick="addExtra('NB')">NB</button>
+</div>
+
+<div class="row-btn">
+  <button class="wicket" onclick="addWicket()">W</button>
+  <button class="wicket" onclick="addRunOut()">RO</button>
+</div>
+
+<div class="row-btn">
+  <button class="undo" onclick="undoBall()">UNDO</button>
+</div>
+
+<div class="row-btn">
+  <button onclick="startMic()">🎤 MIC</button>
+</div>
 
   <div class="footer">Live Match</div>
 </div>
