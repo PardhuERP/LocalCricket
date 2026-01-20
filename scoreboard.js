@@ -44,26 +44,43 @@ async function loadLive(){
 
 /* BATTERS */
 async function loadBatters(s,n){
- const r=await fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`);
- const d=await r.json();
+async function loadBatters(strikerId, nonStrikerId){
 
- const a=d.stats[s]||{runs:0,balls:0,fours:0,sixes:0};
- const b=d.stats[n]||{runs:0,balls:0,fours:0,sixes:0};
+  if(!strikerId && !nonStrikerId){
+    el("batRows").innerHTML="";
+    return;
+  }
 
- const sr1=a.balls?((a.runs/a.balls)*100).toFixed(2):"0.00";
- const sr2=b.balls?((b.runs/b.balls)*100).toFixed(2):"0.00";
+  const r = await fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`);
+  const d = await r.json();
 
- const sn=await getName(s);
- const nn=await getName(n);
+  const a = d.stats[strikerId] || {runs:0,balls:0,fours:0,sixes:0};
+  const b = d.stats[nonStrikerId] || {runs:0,balls:0,fours:0,sixes:0};
 
- if(!s && !n){
-  el("batRows").innerHTML="";
-  return;
-}
+  const sr1 = a.balls ? ((a.runs/a.balls)*100).toFixed(2) : "0.00";
+  const sr2 = b.balls ? ((b.runs/b.balls)*100).toFixed(2) : "0.00";
 
- el("batRows").innerHTML=`
- <div class="row"><span class="name star">* ${sn}</span><span>${a.runs}</span><span>${a.balls}</span><span>${a.fours}</span><span>${a.sixes}</span><span>${sr1}</span></div>
- <div class="row"><span>${nn}</span><span>${b.runs}</span><span>${b.balls}</span><span>${b.fours}</span><span>${b.sixes}</span><span>${sr2}</span></div>`;
+  const sn = await getName(strikerId);
+  const nn = await getName(nonStrikerId);
+
+  el("batRows").innerHTML = `
+  <div class="row">
+    <span class="name star">* ${sn}</span>
+    <span>${a.runs}</span>
+    <span>${a.balls}</span>
+    <span>${a.fours}</span>
+    <span>${a.sixes}</span>
+    <span>${sr1}</span>
+  </div>
+
+  <div class="row">
+    <span>${nn}</span>
+    <span>${b.runs}</span>
+    <span>${b.balls}</span>
+    <span>${b.fours}</span>
+    <span>${b.sixes}</span>
+    <span>${sr2}</span>
+  </div>`;
 }
 
 /* BOWLER */
