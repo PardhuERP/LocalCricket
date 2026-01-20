@@ -20,6 +20,7 @@ async function loadLive(){
 
   loadBatters(d.strikerId, d.nonStrikerId);
   loadBowler(d.bowlerId);
+  handleStateUI(d);   // 🔥 THIS WAS MISSING
 }
 
 /* =========================
@@ -98,7 +99,38 @@ async function loadBowler(id){
     </div>
   `;
 }
+/* =========================
+   HANDL UI
+========================= */
 
+let lastHandledState = null;
+
+function handleStateUI(d){
+  if(!d || !d.state) return;
+
+  // prevent duplicate popups
+  const key = `${d.state}_${d.over}_${d.ball}`;
+  if(lastHandledState === key) return;
+
+  if(d.state === "OVER_END"){
+    lastHandledState = key;
+    openBowlerPopup();
+  }
+}
+/* =========================
+   Popup 
+========================= */
+function openBowlerPopup(){
+  const bowlerId = prompt("Over completed. Enter NEW Bowler ID:");
+  if(!bowlerId) return;
+
+  fetch(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${bowlerId}`)
+    .then(() => setTimeout(loadLive, 500));
+}
+
+/* =========================
+   MIC
+========================= */
 function startMic(){
   const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   rec.lang = "en-IN";
