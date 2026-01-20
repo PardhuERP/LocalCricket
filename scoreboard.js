@@ -11,17 +11,15 @@ let lastHandledState = "";
 async function loadLive(){
   const r = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`);
   const d = await r.json();
-  if(d.status !== "ok") return;
+  if(d.status!=="ok") return;
 
-  // existing UI updates
+  // UI updates
   el("teamScore").innerText = `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
-  el("state").innerText = d.state || "NORMAL";
 
   loadBatters(d.strikerId, d.nonStrikerId);
   loadBowler(d.bowlerId);
 
-  // 🔴 ADD THIS
-  handleStateUI(d);
+  handleStateUI(d);   // 🔥 THIS FIXES POPUPS
 }
 
 /* =========================
