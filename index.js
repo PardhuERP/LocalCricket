@@ -110,33 +110,46 @@ function handleStateUI(d){
  }
 }
 
+
+async function loadRemainingBatters(){
+  const r = await fetch(`${API}?action=getPlaying11&matchId=${MATCH_ID}`);
+  const d = await r.json();
+
+  if(d.status!=="ok") return [];
+
+  const live = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`).then(r=>r.json());
+
+  const outPlayers = d.players.filter(p=>p.isOut);
+  const batting = d.players.filter(p=>!p.isOut && p.teamId===live.battingTeamId);
+
+  return batting;
+}
+
 /* POPUP */
-async function openPopup(mode, title) {
-  popupMode = mode;
-  popupActive = true;
+async function openPopup(mode,title){
+  popupMode=mode;
+  popupActive=true;
+  el("popupTitle").innerText=title;
 
-  el("popupTitle").innerText = title;
+  if(mode==="BATSMAN"){
+    const list = await loadRemainingBatters();
+
+    let html = `<option value="">-- Select Batsman --</option>`;
+    list.forEach(p=>{
+      html += `<option value="${p.playerId}">${p.playerName}</option>`;
+    });
+
+    el("popupSelect").innerHTML = html;
+  }
+
+  if(mode==="BOWLER"){
+    let html = `<option value="">-- Select Bowler --</option>`;
+    html += `<option value="PLAYER_1">PLAYER_1</option>`;
+    html += `<option value="PLAYER_2">PLAYER_2</option>`;
+    el("popupSelect").innerHTML = html;
+  }
+
   el("popup").classList.remove("hidden");
-
-  // 🔹 Load real players based on mode
-  const live = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`).then(r => r.json());
-  if (live.status !== "ok") return;
-
-  let teamId = mode === "BATSMAN" ? live.battingTeamId : live.bowlingTeamId;
-
-  const squad = await fetch(`${API}?action=getPlaying11&matchId=${MATCH_ID}&teamId=${teamId}`).then(r => r.json());
-
-  let html = `<option value="">-- Select --</option>`;
-
-  squad.players.forEach(p => {
-
-    // Skip current striker/non-striker when choosing batsman
-    if (mode === "BATSMAN" && (p.playerId === live.strikerId || p.playerId === live.nonStrikerId)) return;
-
-    html += `<option value="${p.playerId}">${p.playerName}</option>`;
-  });
-
-  el("popupSelect").innerHTML = html;
 }
 
 function closePopup() {
