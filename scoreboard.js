@@ -56,6 +56,11 @@ async function loadBatters(s,n){
  const sn=await getName(s);
  const nn=await getName(n);
 
+ if(!s && !n){
+  el("batRows").innerHTML="";
+  return;
+}
+
  el("batRows").innerHTML=`
  <div class="row"><span class="name star">* ${sn}</span><span>${a.runs}</span><span>${a.balls}</span><span>${a.fours}</span><span>${a.sixes}</span><span>${sr1}</span></div>
  <div class="row"><span>${nn}</span><span>${b.runs}</span><span>${b.balls}</span><span>${b.fours}</span><span>${b.sixes}</span><span>${sr2}</span></div>`;
