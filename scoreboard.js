@@ -43,7 +43,6 @@ async function loadLive(){
 }
 
 /* BATTERS */
-async function loadBatters(s,n){
 async function loadBatters(strikerId, nonStrikerId){
 
   if(!strikerId && !nonStrikerId){
