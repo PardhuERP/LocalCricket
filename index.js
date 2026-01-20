@@ -112,17 +112,10 @@ function handleStateUI(d){
 
 
 async function loadRemainingBatters(){
-  const r = await fetch(`${API}?action=getPlaying11&matchId=${MATCH_ID}`);
-  const d = await r.json();
+  const squad = await fetch(`${API}?action=getPlaying11&matchId=${MATCH_ID}`).then(r=>r.json());
+  const live  = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`).then(r=>r.json());
 
-  if(d.status!=="ok") return [];
-
-  const live = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`).then(r=>r.json());
-
-  const outPlayers = d.players.filter(p=>p.isOut);
-  const batting = d.players.filter(p=>!p.isOut && p.teamId===live.battingTeamId);
-
-  return batting;
+  return squad.players.filter(p=>p.teamId === live.battingTeamId);
 }
 
 /* POPUP */
