@@ -2,6 +2,8 @@ const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMd
 const MATCH_ID = "MATCH_1768804773924";
 
 const el = id => document.getElementById(id);
+let popupActive = false;
+let lastHandledState = "";
 
 /* =========================
    LOAD LIVE SCORE
@@ -11,15 +13,15 @@ async function loadLive(){
   const d = await r.json();
   if(d.status !== "ok") return;
 
+  // existing UI updates
   el("teamScore").innerText = `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
-
-  const balls = d.over * 6 + d.ball;
-  const crr = balls ? (d.totalRuns / (balls/6)).toFixed(2) : "0.00";
-  el("crr").innerText = `CRR ${crr}`;
-  el("pship").innerText = `P'SHIP ${d.partnershipRuns || 0}(${d.partnershipBalls || 0})`;
+  el("state").innerText = d.state || "NORMAL";
 
   loadBatters(d.strikerId, d.nonStrikerId);
   loadBowler(d.bowlerId);
+
+  // 🔴 ADD THIS
+  handleStateUI(d);
 }
 
 /* =========================
@@ -98,6 +100,61 @@ async function loadBowler(id){
     </div>
   `;
 }
+
+
+/* =========================
+   Handling UI
+========================= */
+function handleStateUI(d){
+  if(popupActive) return;
+
+  // avoid repeat popup
+  if(d.state === lastHandledState) return;
+
+  if(d.state === "OVER_END"){
+    lastHandledState = "OVER_END";
+    openBowlerPopup();
+  }
+
+  if(d.state === "NORMAL"){
+    lastHandledState = "";
+  }
+}
+
+
+/* =========================
+   POPUP 
+========================= */
+async function openBowlerPopup(){
+  popupActive = true;
+
+  const list = await fetch(
+    `${API}?action=getPlayers&teamId=${CURRENT_BOWLING_TEAM}`
+  ).then(r=>r.json());
+
+  let html = `<option value="">-- Select Bowler --</option>`;
+  list.players.forEach(p=>{
+    html += `<option value="${p.playerId}">${p.playerName}</option>`;
+  });
+
+  el("popupTitle").innerText = "Select New Bowler";
+  el("popupSelect").innerHTML = html;
+  el("popup").classList.remove("hidden");
+}
+
+function confirmPopup(){
+  const bowlerId = el("popupSelect").value;
+  if(!bowlerId) return alert("Select bowler");
+
+  fetch(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${bowlerId}`)
+    .then(()=>{
+      popupActive = false;
+      el("popup").classList.add("hidden");
+      lastHandledState = "";
+      loadLive();
+    });
+}
+
 
 /* =========================
    ACTION HELPERS
