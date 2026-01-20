@@ -8,25 +8,20 @@ let lastHandledState = "";
 /* =========================
    LOAD LIVE SCORE
 ========================= */
-
 async function loadLive(){
   const r = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`);
   const d = await r.json();
   if(d.status !== "ok") return;
 
+  // existing UI updates
   el("teamScore").innerText = `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
-
-  const balls = d.over * 6 + d.ball;
-  const crr = balls ? (d.totalRuns / (balls/6)).toFixed(2) : "0.00";
-  el("crr").innerText = `CRR ${crr}`;
-  el("pship").innerText = `P'SHIP ${d.partnershipRuns || 0}(${d.partnershipBalls || 0})`;
+  el("state").innerText = d.state || "NORMAL";
 
   loadBatters(d.strikerId, d.nonStrikerId);
   loadBowler(d.bowlerId);
-}
 
-
-  handleStateUI(d);   // 🔥 THIS FIXES POPUPS
+  // 🔴 ADD THIS
+  handleStateUI(d);
 }
 
 /* =========================
