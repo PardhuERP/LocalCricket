@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Live Scoreboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;font-family:Arial;background:#f2f4f8}
+.board{max-width:390px;margin:15px auto;background:#fff;border-radius:16px;padding:16px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.team{font-size:18px;font-weight:bold}
+.score{font-size:32px;font-weight:bold;margin-top:4px}
+.meta{display:flex;justify-content:space-between;font-size:13px;color:#555;margin:6px 0 10px}
+.table-head,.row{display:grid;grid-template-columns:2fr repeat(5,1fr);font-size:13px;padding:6px 0}
+.table-head{color:#777;border-bottom:1px solid #ddd}
+.name{font-weight:bold}
+.star{color:#0a7cff}
+.footer{text-align:center;font-size:12px;color:#888;margin-top:10px}
+</style>
+</head>
+
+<body>
+
+<div class="board">
+  <div class="team" id="teamName">TEAM</div>
+  <div class="score" id="teamScore">0-0 (0.0)</div>
+
+  <div class="meta">
+    <span id="crr">CRR 0.00</span>
+    <span id="pship">P'SHIP 0(0)</span>
+  </div>
+
+  <div class="table-head">
+    <span>Batter</span><span>R</span><span>B</span><span>4</span><span>6</span><span>SR</span>
+  </div>
+  <div id="batRows"></div>
+
+  <div class="table-head">
+    <span>Bowler</span><span>O</span><span>M</span><span>R</span><span>W</span><span>ECO</span>
+  </div>
+  <div id="bowlRows"></div>
+
+  <div class="footer">Live Match</div>
+</div>
+
+<script src="scoreboard.js"></script>
+</body>
+</html>
