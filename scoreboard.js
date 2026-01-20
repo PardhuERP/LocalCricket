@@ -128,6 +128,21 @@ function openBowlerPopup(){
     .then(() => setTimeout(loadLive, 500));
 }
 
+let popupActive = false;
+
+function handleStateUI(d) {
+  if (popupActive) return;
+
+  if (d.state === "OVER_END") {
+    popupActive = true;
+    openBowlerPopup();
+  }
+
+  if (d.state === "NORMAL") {
+    popupActive = false;
+  }
+}
+
 /* =========================
    MIC
 ========================= */
