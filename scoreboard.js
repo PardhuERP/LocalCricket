@@ -100,6 +100,56 @@ async function loadBowler(id){
 }
 
 /* =========================
+   ACTION HELPERS
+========================= */
+const call = url =>
+  fetch(url).then(() => setTimeout(loadLive, 300));
+
+function addRun(r){
+  call(`${API}?action=addRun&matchId=${MATCH_ID}&runs=${r}`);
+}
+
+function addExtra(type){
+  call(`${API}?action=addExtra&matchId=${MATCH_ID}&type=${type}`);
+}
+
+function addWicket(){
+  call(`${API}?action=addWicket&matchId=${MATCH_ID}&wicketType=BOWLED`);
+}
+
+/* RUN OUT – TEMP SIMPLE (popup later) */
+function addRunOut(){
+  const out = confirm("Is NON-STRIKER out?")
+    ? "NON_STRIKER"
+    : "STRIKER";
+
+  call(`${API}?action=addRunOut&matchId=${MATCH_ID}&out=${out}`);
+}
+
+function undoBall(){
+  call(`${API}?action=undoBall&matchId=${MATCH_ID}`);
+     }
+
+function startMic(){
+  const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  rec.lang = "en-IN";
+  rec.start();
+
+  rec.onresult = e => {
+    const t = e.results[0][0].transcript.toLowerCase();
+
+    if(t.includes("six")) addRun(6);
+    else if(t.includes("four")) addRun(4);
+    else if(t.includes("two")) addRun(2);
+    else if(t.includes("one")) addRun(1);
+    else if(t.includes("dot") || t.includes("zero")) addRun(0);
+    else if(t.includes("wide")) addExtra("WD");
+    else if(t.includes("no ball")) addExtra("NB");
+    else if(t.includes("out")) addWicket();
+  };
+     }
+
+/* =========================
    INIT
 ========================= */
 loadLive();
