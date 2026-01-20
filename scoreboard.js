@@ -51,6 +51,8 @@ async function loadBatters(strikerId, nonStrikerId){
     return;
   }
 
+ console.log("BAT UI:", strikerId, nonStrikerId);
+
   const r = await fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`);
   const d = await r.json();
 
