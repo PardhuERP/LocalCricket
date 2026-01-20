@@ -112,10 +112,29 @@ function handleStateUI(d){
 
 
 async function loadRemainingBatters(){
-  const squad = await fetch(`${API}?action=getPlaying11&matchId=${MATCH_ID}`).then(r=>r.json());
-  const live  = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`).then(r=>r.json());
 
-  return squad.players.filter(p=>p.teamId === live.battingTeamId);
+  const live = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`).then(r=>r.json());
+  const squad = await fetch(`${API}?action=getPlaying11&matchId=${MATCH_ID}`).then(r=>r.json());
+  const stats = await fetch(`${API}?action=getBatsmanStats&matchId=${MATCH_ID}`).then(r=>r.json());
+
+  if(!squad.players) return [];
+
+  // Batting team players
+  let players = squad.players.filter(p=>p.teamId === live.battingTeamId);
+
+  // Remove current batsmen
+  players = players.filter(p=>
+    p.playerId !== live.strikerId &&
+    p.playerId !== live.nonStrikerId
+  );
+
+  // Remove already OUT players
+  players = players.filter(p=>{
+    const s = stats.stats[p.playerId];
+    return !(s && s.isOut === true);
+  });
+
+  return players;
 }
 
 /* POPUP */
