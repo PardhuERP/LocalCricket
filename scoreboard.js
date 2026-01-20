@@ -2,8 +2,6 @@ const API = "https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMd
 const MATCH_ID = "MATCH_1768804773924";
 
 const el = id => document.getElementById(id);
-let popupActive = false;
-let lastHandledState = "";
 
 /* =========================
    LOAD LIVE SCORE
@@ -13,15 +11,15 @@ async function loadLive(){
   const d = await r.json();
   if(d.status !== "ok") return;
 
-  // existing UI updates
   el("teamScore").innerText = `${d.totalRuns}-${d.wickets} (${d.over}.${d.ball})`;
-  el("state").innerText = d.state || "NORMAL";
+
+  const balls = d.over * 6 + d.ball;
+  const crr = balls ? (d.totalRuns / (balls/6)).toFixed(2) : "0.00";
+  el("crr").innerText = `CRR ${crr}`;
+  el("pship").innerText = `P'SHIP ${d.partnershipRuns || 0}(${d.partnershipBalls || 0})`;
 
   loadBatters(d.strikerId, d.nonStrikerId);
   loadBowler(d.bowlerId);
-
-  // 🔴 ADD THIS
-  handleStateUI(d);
 }
 
 /* =========================
@@ -101,60 +99,24 @@ async function loadBowler(id){
   `;
 }
 
+function startMic(){
+  const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  rec.lang = "en-IN";
+  rec.start();
 
-/* =========================
-   Handling UI
-========================= */
-function handleStateUI(d){
-  if(popupActive) return;
+  rec.onresult = e => {
+    const t = e.results[0][0].transcript.toLowerCase();
 
-  // avoid repeat popup
-  if(d.state === lastHandledState) return;
-
-  if(d.state === "OVER_END"){
-    lastHandledState = "OVER_END";
-    openBowlerPopup();
-  }
-
-  if(d.state === "NORMAL"){
-    lastHandledState = "";
-  }
+    if(t.includes("six")) addRun(6);
+    else if(t.includes("four")) addRun(4);
+    else if(t.includes("two")) addRun(2);
+    else if(t.includes("one")) addRun(1);
+    else if(t.includes("dot") || t.includes("zero")) addRun(0);
+    else if(t.includes("wide")) addExtra("WD");
+    else if(t.includes("no ball")) addExtra("NB");
+    else if(t.includes("out")) addWicket();
+  };
 }
-
-
-/* =========================
-   POPUP 
-========================= */
-async function openBowlerPopup(){
-  popupActive = true;
-
-  const list = await fetch(
-    `${API}?action=getPlayers&teamId=${CURRENT_BOWLING_TEAM}`
-  ).then(r=>r.json());
-
-  let html = `<option value="">-- Select Bowler --</option>`;
-  list.players.forEach(p=>{
-    html += `<option value="${p.playerId}">${p.playerName}</option>`;
-  });
-
-  el("popupTitle").innerText = "Select New Bowler";
-  el("popupSelect").innerHTML = html;
-  el("popup").classList.remove("hidden");
-}
-
-function confirmPopup(){
-  const bowlerId = el("popupSelect").value;
-  if(!bowlerId) return alert("Select bowler");
-
-  fetch(`${API}?action=changeBowler&matchId=${MATCH_ID}&newBowlerId=${bowlerId}`)
-    .then(()=>{
-      popupActive = false;
-      el("popup").classList.add("hidden");
-      lastHandledState = "";
-      loadLive();
-    });
-}
-
 
 /* =========================
    ACTION HELPERS
@@ -185,26 +147,9 @@ function addRunOut(){
 
 function undoBall(){
   call(`${API}?action=undoBall&matchId=${MATCH_ID}`);
-     }
+}
 
-function startMic(){
-  const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  rec.lang = "en-IN";
-  rec.start();
 
-  rec.onresult = e => {
-    const t = e.results[0][0].transcript.toLowerCase();
-
-    if(t.includes("six")) addRun(6);
-    else if(t.includes("four")) addRun(4);
-    else if(t.includes("two")) addRun(2);
-    else if(t.includes("one")) addRun(1);
-    else if(t.includes("dot") || t.includes("zero")) addRun(0);
-    else if(t.includes("wide")) addExtra("WD");
-    else if(t.includes("no ball")) addExtra("NB");
-    else if(t.includes("out")) addWicket();
-  };
-     }
 
 /* =========================
    INIT
