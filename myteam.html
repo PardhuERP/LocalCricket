@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Team</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f2f4f8;
+}
+.header{
+  background:#0a7cff;
+  color:#fff;
+  padding:16px;
+  text-align:center;
+  font-size:18px;
+  font-weight:bold;
+}
+.box{
+  background:#fff;
+  margin:14px;
+  padding:16px;
+  border-radius:14px;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+button{
+  width:100%;
+  padding:14px;
+  margin:8px 0;
+  font-size:16px;
+  border:none;
+  border-radius:10px;
+  background:#0a7cff;
+  color:#fff;
+}
+button.secondary{
+  background:#444;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">👥 My Team</div>
+
+<div class="box">
+  <button onclick="go('teams.html')">
+    🏏 Team Details
+  </button>
+
+  <button onclick="go('players.html')">
+    👤 Players
+  </button>
+
+  <button onclick="go('playing11.html')">
+    📋 Playing XI
+  </button>
+</div>
+
+<div class="box">
+  <button class="secondary" onclick="go('team-dashboard.html')">
+    ⬅ Back to Dashboard
+  </button>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const teamId = params.get("teamId") || "";
+
+/* Redirect helper */
+function go(page){
+  window.location = page + (teamId ? `?teamId=${teamId}` : "");
+}
+</script>
+
+</body>
+</html>
