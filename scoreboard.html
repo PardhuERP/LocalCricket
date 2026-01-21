@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scoreboard Control</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;font-family:Arial;background:#f2f4f8}
+.header{background:#0a7cff;color:#fff;padding:14px;text-align:center;font-size:18px;font-weight:bold}
+
+.box{background:#fff;margin:12px;border-radius:12px;padding:14px}
+label{font-weight:bold;font-size:14px}
+select,button{width:100%;padding:12px;margin-top:8px;font-size:15px}
+button{border:none;border-radius:8px;background:#0a7cff;color:#fff}
+button.secondary{background:#444}
+button.warn{background:#e53935}
+
+.status{font-size:14px;margin-top:6px;color:#333}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<div class="header">🏏 Scoreboard – Match Control</div>
+
+<!-- TEAM SELECTION -->
+<div class="box">
+  <label>Select Team</label>
+  <select id="teamSelect"></select>
+</div>
+
+<!-- MATCH SELECTION -->
+<div class="box">
+  <label>Select Match</label>
+  <select id="matchSelect"></select>
+</div>
+
+<!-- MATCH INFO -->
+<div class="box" id="matchBox" class="hidden">
+  <div class="status" id="matchInfo">Loading...</div>
+</div>
+
+<!-- ACTIONS -->
+<div class="box">
+  <div class="actions">
+    <button id="btnToss" class="hidden">SET TOSS</button>
+    <button id="btnPlaying11" class="hidden">SET PLAYING 11</button>
+    <button id="btnOpeners" class="hidden">SET OPENERS</button>
+
+    <button id="btnStart1" class="hidden">START 1st INNINGS</button>
+    <button id="btnLive" class="hidden secondary">GO TO LIVE SCORING</button>
+
+    <button id="btnEnd1" class="hidden warn">END 1st INNINGS</button>
+    <button id="btnStart2" class="hidden">START 2nd INNINGS</button>
+
+    <button id="btnSummary" class="hidden secondary">VIEW SUMMARY</button>
+  </div>
+</div>
+
+<script src="scoreboard.js"></script>
+</body>
+</html>
