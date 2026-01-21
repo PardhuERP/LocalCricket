@@ -1,19 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Cricket Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{margin:0;font-family:Arial;background:#f2f4f8}
-.header{background:#0a7cff;color:#fff;padding:14px;font-size:18px;text-align:center;font-weight:bold}
-.box{background:#fff;margin:12px;border-radius:12px;padding:14px}
-select,button{width:100%;padding:12px;margin:6px 0;font-size:16px}
-button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.live{background:#111;color:#0f0;padding:10px;border-radius:10px;font-size:14px;line-height:1.5}
-.small{font-size:13px;color:#555;margin-top:4px}
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f2f4f8
+}
+.header{
+  background:#0a7cff;
+  color:#fff;
+  padding:14px;
+  font-size:18px;
+  text-align:center;
+  font-weight:bold
+}
+.box{
+  background:#fff;
+  margin:12px;
+  border-radius:12px;
+  padding:14px
+}
+select,button{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  font-size:16px
+}
+button{
+  background:#0a7cff;
+  color:#fff;
+  border:none;
+  border-radius:8px
+}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px
+}
+.live{
+  background:#111;
+  color:#0f0;
+  padding:10px;
+  border-radius:10px;
+  font-size:14px;
+  line-height:1.6
+}
+.small{
+  font-size:13px;
+  color:#555;
+  margin-top:4px
+}
 </style>
 </head>
 
@@ -21,107 +62,37 @@ button{background:#0a7cff;color:#fff;border:none;border-radius:8px}
 
 <div class="header">🏏 Cricket Admin Panel</div>
 
+<!-- MATCH SELECT -->
 <div class="box">
-<label><b>Select Match</b></label>
-<select id="matchSelect"></select>
-<button onclick="loadMatch()">Load Match</button>
-<div class="small" id="matchInfo"></div>
+  <label><b>Select Match</b></label>
+  <select id="matchSelect"></select>
+  <button onclick="loadMatch()">Load Match</button>
+
+  <div class="small" id="matchInfo"></div>
 </div>
 
+<!-- NAVIGATION -->
 <div class="box">
-<div class="grid">
-<button onclick="go('toss.html')">Toss</button>
-<button onclick="go('playing11.html')">Playing 11</button>
-<button onclick="go('openers.html')">Set Openers</button>
-<button onclick="go('index.html')">Live Scoring</button>
-</div>
+  <div class="grid">
+    <button onclick="go('toss.html')">Toss</button>
+    <button onclick="go('playing11.html')">Playing 11</button>
+    <button onclick="go('openers.html')">Set Openers</button>
+    <button onclick="go('scoreboard.html')">Live Scoring</button>
+  </div>
 </div>
 
+<!-- INNINGS CONTROL -->
 <div class="box">
-<button onclick="startInnings()">Start 1st Innings</button>
-<button onclick="endInnings()">End Current Innings</button>
-<button onclick="startSecond()">Start 2nd Innings</button>
+  <button onclick="startInnings()">Start 1st Innings</button>
+  <button onclick="endInnings()">End Innings</button>
+  <button onclick="startSecond()">Start 2nd Innings</button>
 </div>
 
+<!-- LIVE PREVIEW -->
 <div class="box">
-<div class="live" id="liveBox">Waiting match...</div>
+  <div class="live" id="liveBox">Waiting for match...</div>
 </div>
 
-<script>
-const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
-let MATCH_ID="";
-let matches=[];
-
-/* Load matches */
-fetch(`${API}?action=getMatches`)
-.then(r=>r.json())
-.then(d=>{
-matches=d.matches||[];
-let html='<option value="">-- Select Match --</option>';
-matches.forEach(m=>{
-html+=`<option value="${m.matchId}">${m.matchId}</option>`;
-});
-matchSelect.innerHTML=html;
-});
-
-/* Load match info */
-async function loadMatch(){
-MATCH_ID=matchSelect.value;
-if(!MATCH_ID)return alert("Select match");
-
-const m = await fetch(`${API}?action=getMatch&matchId=${MATCH_ID}`).then(r=>r.json());
-if(m.status!=="ok"){ matchInfo.innerHTML="Match not found"; return; }
-
-const ta = await fetch(`${API}?action=getTeamName&teamId=${m.teamAId}`).then(r=>r.json());
-const tb = await fetch(`${API}?action=getTeamName&teamId=${m.teamBId}`).then(r=>r.json());
-
-matchInfo.innerHTML=`
-<b>${ta.name}</b> vs <b>${tb.name}</b><br>
-Overs: ${m.overs}<br>
-Venue: ${m.venue}<br>
-Status: ${m.matchStatus}`;
-}
-
-/* Live preview */
-async function loadLive(){
-if(!MATCH_ID)return;
-
-const d = await fetch(`${API}?action=getLiveState&matchId=${MATCH_ID}`).then(r=>r.json());
-if(d.status!=="ok") return;
-
-const s = await fetch(`${API}?action=getPlayerName&playerId=${d.strikerId}`).then(r=>r.json());
-const b = await fetch(`${API}?action=getPlayerName&playerId=${d.bowlerId}`).then(r=>r.json());
-
-liveBox.innerHTML=`
-Score : ${d.totalRuns}-${d.wickets}<br>
-Over : ${d.over}.${d.ball}<br>
-Striker : ${s.name}<br>
-Bowler : ${b.name}<br>
-State : ${d.state}`;
-}
-setInterval(loadLive,2000);
-
-/* Navigation */
-function go(p){
-if(!MATCH_ID)return alert("Load match first");
-window.location=p+`?matchId=${MATCH_ID}`;
-}
-
-/* Match actions */
-function startInnings(){
-fetch(`${API}?action=startFirstInnings&matchId=${MATCH_ID}`)
-.then(r=>r.json())
-.then(d=>alert("1st Innings Started"));
-}
-function endInnings(){
-fetch(`${API}?action=endInnings&matchId=${MATCH_ID}`)
-.then(()=>alert("Innings Ended"));
-}
-function startSecond(){
-fetch(`${API}?action=startSecondInnings&matchId=${MATCH_ID}`)
-.then(()=>alert("2nd Innings Started"));
-}
-</script>
-
+<script src="dashboard.js"></script>
 </body>
 </html>
