@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Matches</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;font-family:Arial;background:#f2f4f8}
+.header{background:#0a7cff;color:#fff;padding:16px;text-align:center;font-size:18px;font-weight:bold}
+.box{background:#fff;margin:14px;padding:14px;border-radius:14px}
+h3{margin:6px 0 10px;font-size:16px}
+.item{border-bottom:1px solid #eee;padding:8px 0;font-size:14px}
+.btn{padding:8px 12px;border:none;border-radius:8px;font-size:14px}
+.approve{background:#2e7d32;color:#fff}
+.reject{background:#c62828;color:#fff}
+.primary{background:#0a7cff;color:#fff;width:100%;padding:12px;border:none;border-radius:10px}
+.secondary{background:#444;color:#fff;width:100%;padding:12px;border:none;border-radius:10px;margin-top:10px}
+select,input{width:100%;padding:10px;margin:6px 0}
+.small{font-size:12px;color:#666}
+</style>
+</head>
+
+<body>
+
+<div class="header">📅 Matches</div>
+
+<!-- Incoming Requests -->
+<div class="box">
+  <h3>📥 Incoming Match Requests</h3>
+  <div id="incoming">Loading...</div>
+</div>
+
+<!-- Sent Requests -->
+<div class="box">
+  <h3>📤 Sent Match Requests</h3>
+  <div id="sent">Loading...</div>
+</div>
+
+<!-- Create Request -->
+<div class="box">
+  <h3>➕ Create Match Request</h3>
+
+  <select id="fromTeam"></select>
+  <select id="toTeam"></select>
+  <input id="overs" placeholder="Overs">
+  <input id="venue" placeholder="Venue">
+  <input id="matchDate" type="datetime-local">
+
+  <button class="primary" onclick="sendRequest()">Send Request</button>
+</div>
+
+<div class="box">
+  <button class="secondary" onclick="back()">⬅ Back to Dashboard</button>
+</div>
+
+<script>
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+const USER_ID="ADMIN_1";
+
+/* Load teams */
+fetch(`${API}?action=getTeams`)
+.then(r=>r.json())
+.then(d=>{
+  let opt='<option value="">Select Team</option>';
+  d.teams.forEach(t=>{
+    opt+=`<option value="${t.teamId}">${t.teamName}</option>`;
+  });
+  fromTeam.innerHTML=opt;
+  toTeam.innerHTML=opt;
+});
+
+/* Incoming */
+fetch(`${API}?action=getMatchRequests&teamId=ALL`)
+.then(r=>r.json())
+.then(d=>{
+  if(!d.requests || d.requests.length===0){
+    incoming.innerHTML="No incoming requests";
+    sent.innerHTML="No sent requests";
+    return;
+  }
+
+  incoming.innerHTML="";
+  sent.innerHTML="";
+
+  d.requests.forEach(r=>{
+    const row=`
+    <div class="item">
+      ${r.fromTeamId} ➝ ${r.toTeamId}<br>
+      Overs: ${r.overs} | ${r.venue}<br>
+      Status: <b>${r.status}</b><br>
+      ${
+        r.status==="PENDING" ? `
+        <button class="btn approve" onclick="update('${r.requestId}','APPROVE')">Approve</button>
+        <button class="btn reject" onclick="update('${r.requestId}','REJECT')">Reject</button>` : ""
+      }
+    </div>`;
+
+    if(r.toTeamId){
+      incoming.innerHTML+=row;
+    }else{
+      sent.innerHTML+=row;
+    }
+  });
+});
+
+/* Update status */
+function update(id,status){
+fetch(`${API}?action=updateMatchRequest&requestId=${id}&status=${status}`)
+.then(()=>location.reload());
+}
+
+/* Create request */
+function sendRequest(){
+fetch(`${API}?action=createMatchRequest
+&fromTeamId=${fromTeam.value}
+&toTeamId=${toTeam.value}
+&overs=${overs.value}
+&venue=${venue.value}
+&matchDate=${matchDate.value}
+&requestedByUserId=${USER_ID}`)
+.then(()=>alert("Request Sent ✅"));
+}
+
+function back(){
+window.location="team-dashboard.html";
+}
+</script>
+
+</body>
+</html>
