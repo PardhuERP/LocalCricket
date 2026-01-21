@@ -1,79 +1,175 @@
-<!DOCTYPE html>  <html>  
-<head>  
-<meta charset="UTF-8">  
-<title>Match Request</title>  
-<meta name="viewport" content="width=device-width, initial-scale=1">  <style>  
-body{font-family:Arial;background:#f2f4f8;padding:20px}  
-.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}  
-select,input,button{width:100%;padding:12px;margin:8px 0;font-size:16px}  
-button{background:#0a7cff;color:#fff;border:none;border-radius:8px}  
-.req{padding:10px;border-bottom:1px solid #ddd;font-size:14px}  
-</style>  </head>  
-<body>  <div class="box">  
-  <h2>Create Match Request</h2>  <label>From Team</label>
-<select id="fromTeam"></select>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Match Requests</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<label>To Team</label>
-<select id="toTeam"></select>
+<style>
+body{font-family:Arial;background:#f2f4f8;padding:20px}
+.box{background:#fff;padding:16px;border-radius:12px;max-width:420px;margin:auto}
+select,input,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
+button{background:#0a7cff;color:#fff;border:none;border-radius:8px;cursor:pointer}
+.req{padding:10px;border-bottom:1px solid #ddd;font-size:14px}
+.req b{display:block}
+.actions{display:flex;gap:8px;margin-top:6px}
+.accept{background:#2e7d32}
+.reject{background:#c62828}
+h3{margin-top:20px}
+</style>
+</head>
 
-<label>Overs</label>
-<input id="overs" type="number" placeholder="10">
+<body>
 
-<label>Match Type</label>
-<select id="matchType">
-<option value="FRIENDLY">Friendly</option>
-<option value="TOURNAMENT">Tournament</option>
-</select>
+<div class="box">
+  <h2>Create Match Request</h2>
 
-<label>Venue</label>
-<input id="venue" placeholder="Hyderabad">
+  <label>From Team</label>
+  <select id="fromTeam"></select>
 
-<label>Match Date</label>
-<input id="matchDate" type="datetime-local">
+  <label>To Team</label>
+  <select id="toTeam"></select>
 
-<button onclick="sendRequest()">Send Request</button>
+  <label>Overs</label>
+  <input id="overs" type="number" placeholder="10">
 
-  <h3>Sent Requests</h3>  
-  <div id="sentList"></div>  
-</div>  <script>  
-const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";  
-  
-function loadTeams(){  
-fetch(API+"?action=getTeams")  
-.then(r=>r.json())  
-.then(d=>{  
-if(d.status!=="ok") return;  
-const f=document.getElementById("fromTeam");  
-const t=document.getElementById("toTeam");  
-f.innerHTML='<option value="">Select</option>';  
-t.innerHTML='<option value="">Select</option>';  
-d.teams.forEach(team=>{  
-f.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;  
-t.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;  
-});  
-});  
-}  
-  
-function sendRequest(){  
-const from=document.getElementById("fromTeam").value;  
-const to=document.getElementById("toTeam").value;  
-const overs=document.getElementById("overs").value;  
-const venue=document.getElementById("venue").value;  
-const date=document.getElementById("matchDate").value;  
-const type=document.getElementById("matchType").value;  
-  
-if(!from||!to||!overs||!venue||!date){  
-alert("Fill all fields");return;  
-}  
-  
-const url=API+  
-`?action=createMatchRequest&fromTeamId=${from}&toTeamId=${to}&overs=${overs}&matchType=${type}&venue=${encodeURIComponent(venue)}&matchDate=${date}`;  
-  
-fetch(url).then(r=>r.json()).then(d=>{  
-alert("Request Sent");  
-});  
-}  
-  
-loadTeams();  
-</script>  </body>  
+  <label>Match Type</label>
+  <select id="matchType">
+    <option value="FRIENDLY">Friendly</option>
+    <option value="TOURNAMENT">Tournament</option>
+  </select>
+
+  <label>Venue</label>
+  <input id="venue" placeholder="Hyderabad">
+
+  <label>Match Date</label>
+  <input id="matchDate" type="datetime-local">
+
+  <button onclick="sendRequest()">Send Request</button>
+
+  <h3>Incoming Requests</h3>
+  <div id="incomingList">Loading...</div>
+
+  <h3>Sent Requests</h3>
+  <div id="sentList">Loading...</div>
+</div>
+
+<script>
+const API="https://script.google.com/macros/s/AKfycbwoc84x0cmXWJ6GHzEae4kTJCMdEyvlK7NKq7m12oE6getykgU0UuUUpc37LZcoCuI/exec";
+
+let myTeamId="";
+
+/* LOAD TEAMS */
+function loadTeams(){
+fetch(API+"?action=getTeams")
+.then(r=>r.json())
+.then(d=>{
+if(d.status!=="ok") return;
+
+const f=document.getElementById("fromTeam");
+const t=document.getElementById("toTeam");
+f.innerHTML='<option value="">Select</option>';
+t.innerHTML='<option value="">Select</option>';
+
+d.teams.forEach(team=>{
+f.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;
+t.innerHTML+=`<option value="${team.teamId}">${team.teamName}</option>`;
+});
+
+// assume logged-in team = first selected
+f.onchange=()=>{
+  myTeamId=f.value;
+  loadRequests();
+};
+});
+}
+
+/* SEND REQUEST */
+function sendRequest(){
+const from=fromTeam.value;
+const to=toTeam.value;
+const overs=oversInput.value;
+const venue=venueInput.value;
+const date=matchDate.value;
+const type=matchType.value;
+
+if(!from||!to||!overs||!venue||!date){
+alert("Fill all fields");return;
+}
+
+fetch(API+
+`?action=createMatchRequest&fromTeamId=${from}&toTeamId=${to}&overs=${overs}&matchType=${type}&venue=${encodeURIComponent(venue)}&matchDate=${date}`)
+.then(()=>{ alert("Request Sent"); loadRequests(); });
+}
+
+/* LOAD REQUESTS */
+function loadRequests(){
+if(!myTeamId) return;
+
+fetch(`${API}?action=getMatchRequests&teamId=${myTeamId}`)
+.then(r=>r.json())
+.then(d=>{
+if(d.status!=="ok") return;
+
+renderIncoming(d.incoming||[]);
+renderSent(d.sent||[]);
+});
+}
+
+/* INCOMING */
+function renderIncoming(list){
+const box=document.getElementById("incomingList");
+box.innerHTML="";
+if(!list.length){ box.innerHTML="No incoming requests"; return; }
+
+list.forEach(r=>{
+box.innerHTML+=`
+<div class="req">
+<b>${r.fromTeamName} vs ${r.toTeamName}</b>
+Overs: ${r.overs}<br>
+Venue: ${r.venue}<br>
+Date: ${r.matchDate}
+<div class="actions">
+<button class="accept" onclick="updateReq('${r.requestId}','APPROVE')">Accept</button>
+<button class="reject" onclick="updateReq('${r.requestId}','REJECT')">Reject</button>
+</div>
+</div>`;
+});
+}
+
+/* SENT */
+function renderSent(list){
+const box=document.getElementById("sentList");
+box.innerHTML="";
+if(!list.length){ box.innerHTML="No sent requests"; return; }
+
+list.forEach(r=>{
+box.innerHTML+=`
+<div class="req">
+<b>${r.fromTeamName} vs ${r.toTeamName}</b>
+Overs: ${r.overs}<br>
+Venue: ${r.venue}<br>
+Status: <b>${r.status}</b>
+</div>`;
+});
+}
+
+/* UPDATE REQUEST */
+function updateReq(id,status){
+fetch(`${API}?action=updateMatchRequest&requestId=${id}&status=${status}`)
+.then(()=>loadRequests());
+}
+
+/* INIT */
+const oversInput=document.getElementById("overs");
+const venueInput=document.getElementById("venue");
+const matchDate=document.getElementById("matchDate");
+const matchType=document.getElementById("matchType");
+const fromTeam=document.getElementById("fromTeam");
+const toTeam=document.getElementById("toTeam");
+
+loadTeams();
+</script>
+
+</body>
 </html>
