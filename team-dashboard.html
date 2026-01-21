@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Team Dashboard</title>
@@ -11,87 +11,93 @@ body{
   font-family:Arial;
   background:#f2f4f8;
 }
-.container{
-  max-width:420px;
-  margin:20px auto;
-  padding:10px;
-}
-.title{
+
+.header{
+  background:#0a7cff;
+  color:#fff;
+  padding:16px;
   text-align:center;
   font-size:20px;
   font-weight:bold;
-  margin-bottom:16px;
 }
-.grid{
+
+.container{
+  max-width:420px;
+  margin:20px auto;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:12px;
+  gap:14px;
+  padding:10px;
 }
+
 .card{
   background:#fff;
   border-radius:14px;
   padding:18px;
   text-align:center;
-  font-size:16px;
-  font-weight:bold;
-  box-shadow:0 4px 12px rgba(0,0,0,.12);
+  box-shadow:0 6px 16px rgba(0,0,0,.12);
   cursor:pointer;
+  transition:.2s;
 }
-.card small{
-  display:block;
-  margin-top:6px;
-  font-size:12px;
-  color:#666;
+
+.card:hover{
+  transform:scale(1.03);
 }
-.footer{
-  text-align:center;
-  margin-top:20px;
-  font-size:12px;
-  color:#888;
+
+.card h3{
+  margin:10px 0 6px;
+  font-size:16px;
+}
+
+.card p{
+  font-size:13px;
+  color:#555;
 }
 </style>
 </head>
 
 <body>
 
+<div class="header">🏏 Team Dashboard</div>
+
 <div class="container">
-  <div class="title">Dashboard</div>
 
-  <div class="grid">
-
-    <div class="card" onclick="go('teams.html')">
-      My Team
-      <small>Teams • Players • Squad</small>
-    </div>
-
-    <div class="card" onclick="go('match-request.html')">
-      Matches
-      <small>Requests • Accept • Reject</small>
-    </div>
-
-    <div class="card" onclick="go('admin.html')">
-      Scoreboard
-      <small>Toss • Playing 11 • Live</small>
-    </div>
-
-    <div class="card" onclick="go('scoreboard.html')">
-      Live Score
-      <small>Public view</small>
-    </div>
-
-    <div class="card" onclick="go('match-summary.html')">
-      Match Summary
-      <small>Scorecard • Stats</small>
-    </div>
-
-    <div class="card" onclick="alert('Coming soon')">
-      ETC
-      <small>Future features</small>
-    </div>
-
+  <!-- MY TEAM -->
+  <div class="card" onclick="go('myteam.html')">
+    <h3>My Team</h3>
+    <p>Teams · Players · Scheduled / Live</p>
   </div>
 
-  <div class="footer">Cricket Management System</div>
+  <!-- MATCHES -->
+  <div class="card" onclick="go('match-requests.html')">
+    <h3>Matches</h3>
+    <p>Find · Sent · Accept / Reject</p>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="card" onclick="go('admin-scoreboard.html')">
+    <h3>Scoreboard</h3>
+    <p>Toss · Playing 11 · Live Scoring</p>
+  </div>
+
+  <!-- LIVE SCORE -->
+  <div class="card" onclick="go('live-score.html')">
+    <h3>Live Score</h3>
+    <p>Public Match Score</p>
+  </div>
+
+  <!-- MATCH SUMMARY -->
+  <div class="card" onclick="go('match-summary.html')">
+    <h3>Match Summary</h3>
+    <p>Full Match Details</p>
+  </div>
+
+  <!-- ETC -->
+  <div class="card">
+    <h3>ETC</h3>
+    <p>Future Features</p>
+  </div>
+
 </div>
 
 <script>
